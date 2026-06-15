@@ -430,7 +430,7 @@ body {
 /* MSU code — primary, teal, accessible */
 .cc-msu {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--msu-color);     /* #0f6b7a — 4.6:1 on white */
   letter-spacing: .02em;
@@ -438,21 +438,21 @@ body {
 /* S&T code — secondary, gray */
 .cc-st {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text3);
 }
 /* S&T only (no MSU equiv) — uses accent color */
 .cc-st-primary {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: .02em;
 }
 
 .cc-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text);
   line-height: 1.35;
@@ -461,7 +461,7 @@ body {
 .cc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .cc-cr {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text2);
   background: var(--surface);
@@ -498,7 +498,7 @@ body {
 }
 
 /* Flag messages */
-.cc-flag { font-size: 10px; margin-top: 4px; font-weight: 600; line-height: 1.4; }
+.cc-flag { font-size: 11px; margin-top: 4px; font-weight: 600; line-height: 1.4; }
 .flag-advisory { color: var(--yellow); }
 .flag-coreq    { color: var(--orange); }
 .flag-blocked  { color: var(--red);    }
@@ -602,12 +602,12 @@ textarea.tbox:focus { border-color: var(--accent); }
 .sc-card{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:5px;background:var(--white);cursor:grab;user-select:none;transition:all .15s;box-shadow:var(--shadow-sm);}
 .sc-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(29,78,216,.1);transform:translateX(2px);}
 .sc-card.sc-dragging{opacity:.3;cursor:grabbing;}
-.sc-msu{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--msu-color);}
+.sc-msu{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--msu-color);}
 .sc-st{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:1px;}
 .sc-st-only{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);}
-.sc-title{font-size:11px;color:var(--text);line-height:1.3;margin-top:3px;}
+.sc-title{font-size:12px;color:var(--text);line-height:1.3;margin-top:3px;}
 .sc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:5px;}
-.sc-cr{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.sc-cr{font-family:var(--mono);font-size:11px;color:var(--text3);}
 .sc-default{font-size:9px;color:var(--accent);font-weight:600;}
 
 /* Remove button on placed cards */
@@ -675,6 +675,7 @@ textarea.tbox:focus { border-color: var(--accent); }
       <div class="hbtns">
         <button class="hbtn" id="undo-btn" onclick="undo()" title="Undo last change (Ctrl+Z)" disabled style="opacity:.4;">↩ Undo</button>
         <button class="hbtn" onclick="confirmReset()" title="Reset plan to default degree map" style="color:var(--red);border-color:var(--red-border);">↺ Reset Plan</button>
+        <button class="hbtn" onclick="savePlanImage()" title="Save degree plan as an image">🖼 Save Image</button>
         <button class="hbtn save" onclick="openSave()">💾 Save</button>
         <button class="hbtn" onclick="openLoad()">📂 Load</button>
       </div>
@@ -1157,6 +1158,7 @@ let pendingMove = null;// {courseId, toSem} awaiting confirm
 let history = [];      // stack of {plan, completed, custom} snapshots
 const MAX_HISTORY = 50;
 let sidebarFilter = 'all';
+let extraYears = [];  // e.g. [{label:'5th Year', sems:['fall2829','spring2829'], summer:'summer2829'}]
 
 // IDs that are GenEd Group 1, Group 2, or Free Electives — get the picker treatment
 const GENED_IDS = new Set([
@@ -1443,6 +1445,7 @@ function launch(prog){
   schedTimes={};
   schedExtras={};
   schedOnline={};
+  extraYears=[];
 
   // Pre-populate from defaultSem
   COURSES.forEach(c=>{
@@ -2065,7 +2068,150 @@ function buildGrid(){
     scroll.appendChild(gap);
   });
 
+  // ── EXTRA YEARS (5th year etc.) ──
+  extraYears.forEach((eyr, eyIdx)=>{
+    renderYearBlock(scroll, eyr);
+    const gap2=document.createElement('div');
+    gap2.style.cssText='height:18px;background:var(--bg);';
+    scroll.appendChild(gap2);
+  });
+
+  // ── ADD YEAR BUTTON ──
+  const addYrBtn=document.createElement('button');
+  addYrBtn.style.cssText='display:block;margin:8px auto 24px;padding:10px 28px;border-radius:8px;border:2px dashed var(--border2);background:var(--white);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s;';
+  addYrBtn.textContent='+ Add Additional Year';
+  addYrBtn.addEventListener('mouseover',()=>{addYrBtn.style.borderColor='var(--accent)';addYrBtn.style.color='var(--accent)';addYrBtn.style.background='var(--accent-light)';});
+  addYrBtn.addEventListener('mouseout',()=>{addYrBtn.style.borderColor='var(--border2)';addYrBtn.style.color='var(--text2)';addYrBtn.style.background='var(--white)';});
+  addYrBtn.addEventListener('click',()=>addExtraYear());
+  scroll.appendChild(addYrBtn);
+
   wrap.appendChild(scroll);
+}
+
+function renderYearBlock(scroll, yr){
+  // Year label row
+  const allYrSems=[...yr.sems,yr.summer].filter(Boolean);
+  const yrCr=allYrSems.reduce((s,sid)=>(plan[sid]||[]).reduce((s2,cid)=>s2+(gc(cid)?.credits||0),0)+s,0);
+
+  const yearDiv=document.createElement('div');
+  yearDiv.style.cssText=`background:var(--text);color:#fff;padding:8px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;justify-content:space-between;border-top:3px solid var(--accent);`;
+  const removeBtn=document.createElement('button');
+  removeBtn.textContent='Remove Year';
+  removeBtn.style.cssText='font-size:10px;font-weight:600;padding:2px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-family:var(--sans);';
+  removeBtn.addEventListener('click',()=>removeExtraYear(yr));
+  yearDiv.innerHTML=`<span>${yr.label}</span><div style="display:flex;align-items:center;gap:10px;"><span style="font-family:var(--mono);font-size:10px;opacity:.7;">${yrCr} cr</span></div>`;
+  yearDiv.appendChild(removeBtn);
+  scroll.appendChild(yearDiv);
+
+  // Semester sub-headers
+  const semHdr=document.createElement('div');
+  semHdr.style.cssText='display:grid;grid-template-columns:1fr 1fr;';
+  yr.sems.forEach(sid=>{
+    const si=SEM_IDS.find(s=>s.id===sid);
+    const courses=plan[sid]||[];
+    const semCr=courses.reduce((s,cid)=>s+(gc(cid)?.credits||0),0);
+    const cc=crClass(semCr);
+    const allDone=courses.length>0&&courses.every(cid=>completed[cid]);
+    const sh=document.createElement('div');
+    sh.style.cssText=`padding:5px 10px;font-size:10px;font-weight:600;color:var(--text2);text-align:center;border:1px solid var(--border);border-top:none;background:${si?.season==='fall'?'#fafbfc':'#f4f6ff'};display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;`;
+    sh.dataset.yearSem=sid;
+    const schedBtn=document.createElement('button');
+    schedBtn.textContent='📅 Schedule';
+    schedBtn.style.cssText='font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;border:1.5px solid var(--accent-border);background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:var(--sans);white-space:nowrap;';
+    schedBtn.addEventListener('click',e=>{e.stopPropagation();openSchedule(sid);});
+    const doneBtn=document.createElement('button');
+    doneBtn.textContent=allDone?'✓ Completed':'✓ Mark Complete';
+    doneBtn.style.cssText=`font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;font-family:var(--sans);white-space:nowrap;border:1.5px solid ${allDone?'var(--green-border)':'var(--border2)'};background:${allDone?'var(--green-light)':'transparent'};color:${allDone?'var(--green)':'var(--text3)'};`;
+    doneBtn.addEventListener('click',e=>{e.stopPropagation();snapshot();if(allDone)courses.forEach(cid=>{delete completed[cid];});else courses.forEach(cid=>{completed[cid]=true;});render();});
+    sh.innerHTML=`<span>${si?.season==='fall'?'🍂 Fall':'🌸 Spring'}</span><span class="col-cr-badge ${cc}">${semCr} cr</span>`;
+    sh.appendChild(doneBtn);
+    sh.appendChild(schedBtn);
+    semHdr.appendChild(sh);
+  });
+  scroll.appendChild(semHdr);
+
+  // Course content row
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:1fr 1fr;';
+  yr.sems.forEach(sid=>{
+    const si=SEM_IDS.find(s=>s.id===sid);
+    const cell=document.createElement('div');
+    cell.style.cssText=`border:1px solid var(--border);border-top:none;padding:10px;background:${si?.season==='fall'?'#fafbfc':'#f7f9ff'};`;
+    const dz=makeDropZone(sid,false);
+    const courses=plan[sid]||[];
+    if(!courses.length){
+      const hint=document.createElement('div');
+      hint.style.cssText='font-size:12px;color:var(--text3);text-align:center;padding:20px 8px;opacity:.4;';
+      hint.textContent='Drag courses here';
+      dz.appendChild(hint);
+    } else {
+      courses.forEach(cid=>dz.appendChild(buildCard(cid,sid)));
+    }
+    cell.appendChild(dz);
+    row.appendChild(cell);
+  });
+  scroll.appendChild(row);
+
+  // Summer strip
+  if(yr.summer){
+    const sumSid=yr.summer;
+    const sumCourses=plan[sumSid]||[];
+    const sumSi=SEM_IDS.find(s=>s.id===sumSid);
+    const sumCr=sumCourses.reduce((s,cid)=>s+(gc(cid)?.credits||0),0);
+    const sumStrip=document.createElement('div');
+    sumStrip.style.cssText='background:#fffbeb;border:1px solid #fde68a;border-top:none;padding:7px 12px;display:flex;align-items:flex-start;gap:12px;';
+    const sumLabel=document.createElement('div');
+    sumLabel.style.cssText='font-size:10px;color:#92400e;font-family:var(--mono);font-weight:600;white-space:nowrap;padding-top:6px;min-width:130px;';
+    sumLabel.innerHTML=`☀ Summer<br><span style="font-weight:400;opacity:.6;font-size:9px;">Drop courses here · optional</span>`;
+    const sumSchedBtn=document.createElement('button');
+    sumSchedBtn.textContent='📅 Schedule';
+    sumSchedBtn.style.cssText='margin-top:4px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;border:1.5px solid #d97706;background:#fef3c7;color:#92400e;cursor:pointer;font-family:var(--sans);display:block;';
+    sumSchedBtn.addEventListener('click',e=>{e.stopPropagation();openSchedule(sumSid);});
+    sumLabel.appendChild(sumSchedBtn);
+    sumStrip.appendChild(sumLabel);
+    const sumDz=makeDropZone(sumSid,true);
+    sumDz.style.flex='1';
+    if(!sumCourses.length){
+      const hint=document.createElement('div');
+      hint.style.cssText='font-size:10px;color:#92400e;opacity:.45;padding:8px 4px;';
+      hint.textContent='Drag courses from Fall or Spring into this summer semester';
+      sumDz.appendChild(hint);
+    } else {
+      sumCourses.forEach(cid=>{const card=buildCard(cid,sumSid);card.style.width='210px';sumDz.appendChild(card);});
+    }
+    sumStrip.appendChild(sumDz);
+    scroll.appendChild(sumStrip);
+  }
+}
+
+function addExtraYear(){
+  snapshot();
+  const n = extraYears.length + 1;
+  const labels = ['5th Year','6th Year','7th Year'];
+  const semSuffixes = [['fall2829','spring2829','summer2829'],['fall2930','spring2930','summer2930'],['fall3031','spring3031','summer3031']];
+  if(n > labels.length) return; // max 3 extra years
+
+  // Add new SEM_IDs if not already present
+  const [f,sp,su] = semSuffixes[n-1];
+  const lbl = labels[n-1];
+  const yr0 = 2028 + (n-1);
+  [
+    {id:f,  label:`Fall ${yr0}`,   isSummer:false, year:lbl},
+    {id:sp, label:`Spring ${yr0+1}`,isSummer:false, year:lbl},
+    {id:su, label:`Summer ${yr0+1}`,isSummer:true,  year:lbl},
+  ].forEach(s=>{ if(!SEM_IDS.find(x=>x.id===s.id)) SEM_IDS.push(s); });
+
+  // Init plan slots
+  [f,sp,su].forEach(sid=>{ if(!plan[sid]) plan[sid]=[]; });
+
+  extraYears.push({label:lbl, sems:[f,sp], summer:su});
+  render();
+}
+
+function removeExtraYear(yr){
+  snapshot();
+  extraYears = extraYears.filter(y=>y!==yr);
+  render();
 }
 
 
@@ -2089,7 +2235,7 @@ function buildCard(cid, sid){
   const semLabel = semOfferedLabel(cid);
   const isMismatch = sid !== '__prior__' && semOfferedMismatch(cid, sid);
   if(semLabel){
-    flagHtml += `<div class="cc-flag flag-info" style="font-size:9px;">📅 Offered: ${semLabel}</div>`;
+    flagHtml += `<div class="cc-flag flag-info" style="font-size:12px;margin-top:5px;">📅 Offered: ${semLabel}</div>`;
   }
   if(isMismatch){
     const si = SEM_IDS.find(s=>s.id===sid);
@@ -3141,9 +3287,276 @@ function saveSchedImage(){
   setTimeout(()=>{ btn.textContent = origText; }, 2500);
 }
 
+// ═══ SAVE PLAN AS IMAGE ═══
+function savePlanImage(){
+  const DPR = 2;
+  const prog = PROGRAMS[P];
+  const allYears = [...YEARS, ...extraYears];
+
+  // ── Layout constants ──
+  const PAD       = 24;
+  const COL_W     = 320;   // width of each semester column
+  const CARD_H    = 58;    // height per course card
+  const CARD_GAP  = 6;
+  const SEM_PAD   = 10;
+  const HDR_H     = 70;    // title bar
+  const YEAR_H    = 32;    // dark year header
+  const SEM_HDR_H = 28;    // fall/spring sub-header
+  const SUM_H     = 42;    // summer strip fixed height
+  const YEAR_GAP  = 16;
+  const TOTAL_W   = PAD * 2 + COL_W * 2;
+
+  // Pre-calculate total height
+  function semH(sid){
+    const n = (plan[sid]||[]).length;
+    return SEM_PAD * 2 + Math.max(1, n) * (CARD_H + CARD_GAP) - CARD_GAP;
+  }
+  function yearH(yr){
+    const maxH = Math.max(semH(yr.sems[0]), semH(yr.sems[1]||yr.sems[0]));
+    return YEAR_H + SEM_HDR_H + maxH + (yr.summer ? SUM_H : 0);
+  }
+
+  const totalH = HDR_H + PAD +
+    allYears.reduce((s, yr) => s + yearH(yr) + YEAR_GAP, 0) +
+    PAD;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = TOTAL_W * DPR;
+  canvas.height = totalH  * DPR;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  // ── Fonts ──
+  const FONT_SANS = '"DM Sans", system-ui, sans-serif';
+  const FONT_MONO = '"DM Mono", "Courier New", monospace';
+
+  // ── Background ──
+  ctx.fillStyle = '#f1f3f7';
+  ctx.fillRect(0, 0, TOTAL_W, totalH);
+
+  // ── Title bar ──
+  const accentColor = prog.accent || '#1d4ed8';
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(0, 0, TOTAL_W, HDR_H);
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold 18px ${FONT_SANS}`;
+  ctx.textBaseline = 'top';
+  ctx.fillText(`${prog.name} — Degree Plan`, PAD, 16);
+  ctx.font = `12px ${FONT_SANS}`;
+  ctx.fillStyle = 'rgba(255,255,255,.7)';
+  ctx.fillText(`${prog.sub} · Missouri State / Missouri S&T Cooperative Engineering · Unofficial`, PAD, 40);
+
+  // Stats
+  let totalCr = 0, doneCr = 0;
+  Object.entries(plan).forEach(([sid,ids])=>{
+    ids.forEach(cid=>{ const cr=gc(cid)?.credits||0; totalCr+=cr; if(completed[cid]) doneCr+=cr; });
+  });
+  ctx.font = `bold 13px ${FONT_MONO}`;
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'right';
+  ctx.fillText(`${totalCr} credits planned · ${doneCr} completed`, TOTAL_W - PAD, 22);
+  ctx.textAlign = 'left';
+
+  // ── Helper: rounded rect ──
+  function rr(x, y, w, h, r, fill, stroke){
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
+  }
+
+  // ── Helper: draw a course card ──
+  function drawCard(cid, x, y, w){
+    const c = gc(cid); if(!c) return CARD_H;
+    const isDone = !!completed[cid];
+    const cx = custom[cid];
+    const displayMsu = cx?.msu || c.msuCode;
+    const displaySt  = cx?.st  || c.stCode;
+
+    const bg    = isDone ? '#f0fdf4' : '#ffffff';
+    const border= isDone ? '#86efac' : '#d4d8e2';
+    const lbar  = isDone ? '#16a34a' : null;
+
+    rr(x, y, w, CARD_H, 6, bg, border);
+    if(lbar){ ctx.fillStyle=lbar; ctx.beginPath(); ctx.roundRect(x, y, 4, CARD_H, [6,0,0,6]); ctx.fill(); }
+
+    // MSU code
+    ctx.font = `bold 13px ${FONT_MONO}`;
+    ctx.fillStyle = displayMsu ? '#0f6b7a' : accentColor;
+    ctx.textBaseline = 'top';
+    ctx.fillText(displayMsu || displaySt, x + 12, y + 9);
+
+    // S&T code
+    if(displayMsu){
+      ctx.font = `10px ${FONT_MONO}`;
+      ctx.fillStyle = '#9099aa';
+      ctx.fillText(displaySt, x + 12, y + 26);
+    }
+
+    // Title — truncate if needed
+    ctx.font = `12px ${FONT_SANS}`;
+    ctx.fillStyle = '#1c2030';
+    const maxW = w - 60;
+    let title = c.title;
+    while(ctx.measureText(title).width > maxW && title.length > 10) title = title.slice(0,-1);
+    if(title !== c.title) title += '…';
+    ctx.fillText(title, x + 12, y + 38);
+
+    // Credits
+    ctx.font = `bold 11px ${FONT_MONO}`;
+    ctx.fillStyle = '#4a5568';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${c.credits}cr`, x + w - 8, y + 9);
+    ctx.textAlign = 'left';
+
+    // Completed checkmark
+    if(isDone){
+      ctx.font = `bold 12px ${FONT_SANS}`;
+      ctx.fillStyle = '#16a34a';
+      ctx.textAlign = 'right';
+      ctx.fillText('✓', x + w - 8, y + 28);
+      ctx.textAlign = 'left';
+    }
+
+    return CARD_H;
+  }
+
+  // ── Draw semester column ──
+  function drawSemCol(sid, x, y, w, bgColor){
+    const courses = plan[sid]||[];
+    const colH = semH(sid);
+    rr(x, y, w, colH, 0, bgColor, '#d4d8e2');
+    let cy = y + SEM_PAD;
+    courses.forEach(cid=>{
+      drawCard(cid, x + SEM_PAD/2, cy, w - SEM_PAD);
+      cy += CARD_H + CARD_GAP;
+    });
+    if(!courses.length){
+      ctx.font = `11px ${FONT_SANS}`;
+      ctx.fillStyle = '#9099aa';
+      ctx.textAlign = 'center';
+      ctx.fillText('Empty', x + w/2, y + colH/2);
+      ctx.textAlign = 'left';
+    }
+    return colH;
+  }
+
+  // ── Draw all years ──
+  let gy = HDR_H + PAD;
+
+  allYears.forEach(yr=>{
+    const x = PAD;
+    const w2 = COL_W;
+
+    // Year header
+    rr(x, gy, TOTAL_W - PAD*2, YEAR_H, [8,8,0,0], '#1c2030', null);
+    ctx.fillStyle = accentColor;
+    ctx.fillRect(x, gy, 4, YEAR_H);
+    ctx.font = `bold 12px ${FONT_SANS}`;
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(yr.label.toUpperCase(), x + 14, gy + YEAR_H/2);
+
+    // Credit total
+    const allSems = [...yr.sems, yr.summer].filter(Boolean);
+    const yrCr = allSems.reduce((s,sid)=>(plan[sid]||[]).reduce((s2,cid)=>s2+(gc(cid)?.credits||0),0)+s, 0);
+    ctx.font = `11px ${FONT_MONO}`;
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${yrCr} cr`, TOTAL_W - PAD - 8, gy + YEAR_H/2);
+    ctx.textAlign = 'left';
+
+    gy += YEAR_H;
+
+    // Sem sub-headers
+    yr.sems.forEach((sid, i)=>{
+      const si = SEM_IDS.find(s=>s.id===sid);
+      const shX = x + i * w2;
+      const bg = i===0 ? '#f0f2f5' : '#eef2ff';
+      ctx.fillStyle = bg;
+      ctx.fillRect(shX, gy, w2, SEM_HDR_H);
+      ctx.strokeStyle = '#d4d8e2'; ctx.lineWidth=1;
+      ctx.strokeRect(shX, gy, w2, SEM_HDR_H);
+      ctx.font = `bold 12px ${FONT_SANS}`;
+      ctx.fillStyle = '#4a5568';
+      ctx.textBaseline = 'middle';
+      const icon = si?.season==='fall' ? '🍂 Fall' : '🌸 Spring';
+      ctx.fillText(icon, shX + 10, gy + SEM_HDR_H/2);
+      const semCr = (plan[sid]||[]).reduce((s,cid)=>s+(gc(cid)?.credits||0),0);
+      ctx.font = `10px ${FONT_MONO}`;
+      ctx.fillStyle = '#6b7a96';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${semCr} cr`, shX + w2 - 8, gy + SEM_HDR_H/2);
+      ctx.textAlign = 'left';
+    });
+    gy += SEM_HDR_H;
+
+    // Sem content
+    const heights = yr.sems.map((sid,i)=>
+      drawSemCol(sid, x + i*w2, gy, w2, i===0?'#fafbfc':'#f7f9ff')
+    );
+    gy += Math.max(...heights);
+
+    // Summer strip
+    if(yr.summer){
+      const sumCourses = plan[yr.summer]||[];
+      ctx.fillStyle = '#fffbeb';
+      ctx.strokeStyle = '#fde68a'; ctx.lineWidth=1;
+      ctx.fillRect(x, gy, TOTAL_W-PAD*2, SUM_H);
+      ctx.strokeRect(x, gy, TOTAL_W-PAD*2, SUM_H);
+      ctx.font = `bold 10px ${FONT_MONO}`;
+      ctx.fillStyle = '#92400e';
+      ctx.textBaseline = 'top';
+      ctx.fillText('☀ Summer', x+10, gy+8);
+      if(!sumCourses.length){
+        ctx.font = `10px ${FONT_SANS}`; ctx.fillStyle='#92400e';
+        ctx.globalAlpha=.5;
+        ctx.fillText('No summer courses', x+10, gy+26);
+        ctx.globalAlpha=1;
+      } else {
+        let sx = x + 100;
+        sumCourses.forEach(cid=>{
+          const c=gc(cid); if(!c) return;
+          const cx2=custom[cid];
+          const lbl=(cx2?.msu||c.msuCode||c.stCode)+'  ';
+          rr(sx, gy+8, ctx.measureText(lbl).width+16, 26, 4, accentColor+'22', accentColor+'44');
+          ctx.font=`bold 10px ${FONT_MONO}`; ctx.fillStyle=accentColor;
+          ctx.fillText(cx2?.msu||c.msuCode||c.stCode, sx+8, gy+15);
+          sx += ctx.measureText(lbl).width + 24;
+        });
+      }
+      gy += SUM_H;
+    }
+
+    gy += YEAR_GAP;
+  });
+
+  // ── Footer ──
+  ctx.fillStyle = '#d4d8e2';
+  ctx.fillRect(PAD, gy, TOTAL_W-PAD*2, 1);
+  ctx.font = `10px ${FONT_SANS}`;
+  ctx.fillStyle = '#9099aa';
+  ctx.textBaseline = 'top';
+  ctx.fillText(`Generated ${new Date().toLocaleDateString()} · Missouri State / Missouri S&T Cooperative Engineering Program · Unofficial planning tool`, PAD, gy+6);
+
+  // ── Download ──
+  try {
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `degree-plan-${P.toLowerCase()}-${new Date().toISOString().slice(0,10)}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(err) {
+    alert('Could not save image. Try the Save/Load text option instead.');
+    console.error(err);
+  }
+}
+
 // ═══ SAVE / LOAD ═══
 function openSave(){
-  document.getElementById('save-text').value=JSON.stringify({program:P,version:5,plan,completed,custom,schedTimes,schedExtras,schedOnline},null,2);
+  document.getElementById('save-text').value=JSON.stringify({program:P,version:6,plan,completed,custom,schedTimes,schedExtras,schedOnline,extraYears},null,2);
   document.getElementById('save-modal').classList.add('open');
 }
 
@@ -3182,6 +3595,9 @@ function doLoad(){
     schedTimes=data.schedTimes||{};
     schedExtras=data.schedExtras||{};
     schedOnline=data.schedOnline||{};
+    extraYears=data.extraYears||[];
+    // Re-init plan slots for extra year sems
+    extraYears.forEach(yr=>{[...yr.sems,yr.summer].filter(Boolean).forEach(sid=>{if(!plan[sid])plan[sid]=[];});});
     history=[];
     document.getElementById('load-modal').classList.remove('open');
     errEl.style.display='none';
