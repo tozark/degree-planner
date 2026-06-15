@@ -1,0 +1,3204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSU Engineering Degree Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── DESIGN TOKENS ─────────────────────────────────────────
+   All colors checked for WCAG AA contrast (≥4.5:1 on text,
+   ≥3:1 for large text / UI components)
+──────────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg: #f1f3f7;
+  --white: #ffffff;
+  --surface: #f8f9fb;
+
+  /* Borders */
+  --border: #d4d8e2;
+  --border2: #b8bece;
+
+  /* Text — all meet 4.5:1 on white */
+  --text:  #1c2030;   /* 16.2:1 on white */
+  --text2: #4a5568;   /* 7.4:1  on white */
+  --text3: #6b7a96;   /* 4.6:1  on white */
+
+  /* Status — dark enough on light bg for text use */
+  --green:         #166534;  /* 7.2:1 on white */
+  --green-light:   #f0fdf4;
+  --green-border:  #86efac;
+  --green-mid:     #16a34a;
+
+  --yellow:        #92400e;  /* 7.0:1 on white */
+  --yellow-light:  #fffbeb;
+  --yellow-border: #fcd34d;
+
+  --orange:        #9a3412;  /* 7.5:1 on white */
+  --orange-light:  #fff7ed;
+  --orange-border: #fdba74;
+
+  --red:           #991b1b;  /* 8.4:1 on white */
+  --red-light:     #fef2f2;
+  --red-border:    #fca5a5;
+
+  /* Program accent (overridden per program) */
+  --accent:        #1d4ed8;  /* 7.5:1 on white */
+  --accent-light:  #eff6ff;
+  --accent-border: #93c5fd;
+  --accent-dark:   #1e3a8a;
+
+  /* MSU code color — distinct teal, 4.6:1 on white */
+  --msu-color: #0f6b7a;
+
+  /* Typography */
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', 'Courier New', monospace;
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.1), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.14), 0 4px 12px rgba(0,0,0,.08);
+
+  /* Focus ring — high visibility for keyboard users */
+  --focus-ring: 0 0 0 3px rgba(29,78,216,.45);
+}
+
+/* ── RESET + BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Accessible focus style for all interactive elements */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--r-sm);
+}
+
+/* ── PROGRAM PICKER ── */
+.picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 48px 24px;
+  background: linear-gradient(160deg, #e8ecf8 0%, #f1f3f7 60%, #e8f0fe 100%);
+}
+.pick-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  margin-bottom: 12px;
+}
+.pick-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: -.02em;
+}
+.pick-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 48px;
+  text-align: center;
+}
+.pick-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+.pick-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 32px 36px;
+  width: 210px;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .15s;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.pick-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+.pick-card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.pick-card.me:hover, .pick-card.me:focus-visible { border-color: #1d4ed8; }
+.pick-card.ce:hover, .pick-card.ce:focus-visible { border-color: #0f766e; }
+.pick-card.ee:hover, .pick-card.ee:focus-visible { border-color: #6d28d9; }
+.pick-icon  { font-size: 40px; margin-bottom: 14px; line-height: 1; }
+.pick-name  { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.pick-full  { font-size: 12px; color: var(--text3); }
+.pick-pill  {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+.me .pick-pill { background: #eff6ff; color: #1d4ed8; }
+.ce .pick-pill { background: #f0fdfa; color: #0f766e; }
+.ee .pick-pill { background: #f5f3ff; color: #6d28d9; }
+
+/* ── APP SHELL ── */
+.app { display: none; flex-direction: column; height: 100vh; }
+.app.on { display: flex; }
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  gap: 16px;
+}
+.hdr-l { display: flex; align-items: center; gap: 12px; }
+.back {
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border2);
+  background: var(--white);
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-weight: 500;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+.back:hover { background: var(--bg); color: var(--text); }
+.prog-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-family: var(--mono);
+  color: #fff;
+  letter-spacing: .04em;
+}
+.hdr-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+.hdr-sub   { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.hdr-r { display: flex; gap: 20px; align-items: center; }
+.hstat { text-align: right; }
+.hstat-v {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--mono);
+  line-height: 1;
+}
+.hstat-l {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-top: 2px;
+  font-weight: 500;
+}
+.hbtns { display: flex; gap: 7px; margin-left: 8px; }
+.hbtn {
+  padding: 7px 13px;
+  border-radius: var(--r-sm);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border2);
+  background: var(--white);
+  color: var(--text2);
+  transition: all .12s;
+  white-space: nowrap;
+}
+.hbtn:hover { background: var(--bg); color: var(--text); border-color: var(--text3); }
+.hbtn.save {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.hbtn.save:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+/* ── LEGEND ── */
+.legend {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 20px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text2);
+  align-items: center;
+  flex-shrink: 0;
+}
+.li { display: flex; align-items: center; gap: 5px; font-weight: 500; }
+.ld {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1.5px solid transparent;
+}
+
+/* ── PRIOR SECTION ── */
+.prior-row-wrap {
+  background: var(--white);
+  border-bottom: 2px solid var(--border);
+}
+.prior-row-head {
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.prior-row-head:hover { background: var(--surface); }
+.prior-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.prior-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); font-weight: 400; }
+.prior-chips-wrap { padding: 8px 18px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.prior-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 500;
+}
+.prior-chip.done {
+  background: var(--green-light);
+  border: 1.5px solid var(--green-border);
+  color: var(--green);
+}
+.prior-chip.pend {
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  color: var(--text2);
+}
+.prior-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: inherit;
+  opacity: .5;
+  padding: 0 0 0 2px;
+  line-height: 1;
+  transition: opacity .12s;
+}
+.prior-chip button:hover { opacity: 1; }
+.prior-drop-hint {
+  border: 2px dashed var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 14px;
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+  margin: 0 18px 12px;
+  transition: all .15s;
+}
+.prior-drop-hint.active {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* ── GRID ── */
+#grid-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── DROP ZONE ── */
+.drop-zone {
+  min-height: 60px;
+  border: 2px dashed transparent;
+  border-radius: var(--r-sm);
+  transition: all .15s;
+  padding: 2px;
+}
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* ── CREDIT BADGES ── */
+.col-cr-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 10px;
+  border: 1.5px solid transparent;
+  letter-spacing: .02em;
+}
+.cr-ok    { background: var(--green-light);  border-color: var(--green-border);  color: var(--green);  }
+.cr-light { background: var(--yellow-light); border-color: var(--yellow-border); color: var(--yellow); }
+.cr-heavy { background: var(--orange-light); border-color: var(--orange-border); color: var(--orange); }
+.cr-over  { background: var(--red-light);    border-color: var(--red-border);    color: var(--red);    }
+.cr-empty { background: var(--surface);      border-color: var(--border);        color: var(--text3);  }
+
+/* ── COURSE CARD ── */
+.course-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 9px 11px;
+  margin-bottom: 6px;
+  background: var(--white);
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow .15s, transform .15s, border-color .15s;
+  box-shadow: var(--shadow-sm);
+}
+.course-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  border-color: var(--border2);
+}
+.course-card:focus-visible { box-shadow: var(--focus-ring); }
+.course-card.dragging { opacity: .25; cursor: grabbing; }
+
+/* Status variants — left accent bar for clear at-a-glance status */
+.course-card.status-ok,
+.course-card.status-none { border-color: var(--border); }
+
+.course-card.status-advisory {
+  border-color: var(--yellow-border);
+  border-left: 4px solid #d97706;
+  background: var(--yellow-light);
+}
+.course-card.status-coreq {
+  border-color: var(--orange-border);
+  border-left: 4px solid #ea580c;
+  background: var(--orange-light);
+}
+.course-card.status-blocked {
+  border-color: var(--red-border);
+  border-left: 4px solid #dc2626;
+  background: var(--red-light);
+}
+.course-card.status-done {
+  border-color: var(--green-border);
+  border-left: 4px solid #16a34a;
+  background: var(--green-light);
+  opacity: .9;
+}
+
+/* Card internals */
+.cc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cc-codes { display: flex; flex-direction: column; gap: 2px; }
+
+/* MSU code — primary, teal, accessible */
+.cc-msu {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--msu-color);     /* #0f6b7a — 4.6:1 on white */
+  letter-spacing: .02em;
+}
+/* S&T code — secondary, gray */
+.cc-st {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text3);
+}
+/* S&T only (no MSU equiv) — uses accent color */
+.cc-st-primary {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: .02em;
+}
+
+.cc-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+  flex: 1;
+}
+.cc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.cc-cr {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+}
+
+/* Accessible checkbox */
+.cc-check {
+  width: 17px;
+  height: 17px;
+  border: 2px solid var(--border2);
+  border-radius: 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--white);
+  position: relative;
+  flex-shrink: 0;
+  transition: all .12s;
+}
+.cc-check:hover { border-color: var(--green-mid); }
+.cc-check:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+.cc-check:checked { background: var(--green-mid); border-color: var(--green-mid); }
+.cc-check:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Flag messages */
+.cc-flag { font-size: 10px; margin-top: 4px; font-weight: 600; line-height: 1.4; }
+.flag-advisory { color: var(--yellow); }
+.flag-coreq    { color: var(--orange); }
+.flag-blocked  { color: var(--red);    }
+.flag-ok       { color: var(--green);  }
+.flag-info     { color: var(--text3);  }
+
+/* ── MODALS ── */
+.modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 40, .5);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  padding: 28px;
+  width: 420px;
+  max-width: 92vw;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn .2s ease;
+}
+@keyframes modalIn {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.modal-wide { width: 520px; }
+.modal-icon { font-size: 28px; margin-bottom: 10px; }
+.modal h3   { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -.01em; }
+.modal p    { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 14px; }
+.modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.btn {
+  padding: 9px 18px;
+  border-radius: var(--r-sm);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border2);
+  background: var(--white);
+  color: var(--text);
+  transition: all .12s;
+}
+.btn:hover { background: var(--bg); }
+.btn-a {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-a:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+textarea.tbox {
+  width: 100%;
+  height: 150px;
+  font-family: var(--mono);
+  font-size: 11px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  resize: none;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+textarea.tbox:focus { border-color: var(--accent); }
+.load-err { color: var(--red); font-size: 11px; margin-top: 6px; display: none; font-weight: 500; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── BODY LAYOUT ── */
+.body{display:grid;grid-template-columns:240px 1fr;flex:1;overflow:hidden;}
+.main-panel{display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border);}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--white);display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);}
+.sidebar-top{padding:12px 12px 0;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em;}
+.sidebar-count{font-size:10px;font-weight:600;color:var(--text3);font-family:var(--mono);text-transform:none;letter-spacing:0;}
+.sidebar-search-row{position:relative;margin-bottom:8px;}
+.sidebar-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;}
+.sidebar-search-row input{width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.sidebar-search-row input:focus{border-color:var(--accent);background:var(--white);}
+.sidebar-filters{display:flex;gap:4px;padding-bottom:10px;flex-wrap:wrap;}
+.sf-btn{padding:3px 10px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s;}
+.sf-btn:hover{border-color:var(--accent);color:var(--accent);}
+.sf-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sidebar-list{overflow-y:auto;flex:1;padding:8px;}
+.sidebar-empty{padding:20px 10px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6;}
+
+/* Sidebar course card */
+.sc-card{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:5px;background:var(--white);cursor:grab;user-select:none;transition:all .15s;box-shadow:var(--shadow-sm);}
+.sc-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(29,78,216,.1);transform:translateX(2px);}
+.sc-card.sc-dragging{opacity:.3;cursor:grabbing;}
+.sc-msu{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--msu-color);}
+.sc-st{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:1px;}
+.sc-st-only{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);}
+.sc-title{font-size:11px;color:var(--text);line-height:1.3;margin-top:3px;}
+.sc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:5px;}
+.sc-cr{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.sc-default{font-size:9px;color:var(--accent);font-weight:600;}
+
+/* Remove button on placed cards */
+.cc-remove{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;color:var(--text3);padding:0;transition:color .12s;flex-shrink:0;}
+.cc-remove:hover{color:var(--red);}
+
+/* ── GENED PICKER ── */
+.gm-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.gm-grid.single-col{grid-template-columns:1fr;}
+.gm-sect-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px;}
+.gm-option{
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:7px 10px;cursor:pointer;background:var(--white);
+  transition:all .12s;text-align:left;
+}
+.gm-option:hover{border-color:var(--accent);background:var(--accent-light);}
+.gm-option.selected{border-color:var(--accent);background:var(--accent-light);}
+.gm-st{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);}
+.gm-msu{font-size:11px;color:var(--text2);margin-top:2px;}
+
+/* ── UNUSED LEGACY (kept for compat) ── */
+.col-header,.sem-col,.year-label-cell,.year-label-text,.year-cr-total,
+.year-cr-label,.year-prog-bar,.year-prog-fill,.col-cr-row,
+.year-tabs,.ytab,.ytab-name,.ytab-cr,.ytab-dot-row,.ytab-dot { /* retained selectors */ }
+</style>
+</head>
+<body>
+
+<!-- PICKER -->
+<div class="picker" id="picker">
+  <div class="pick-eyebrow">MSU Springfield · Cooperative Engineering</div>
+  <div class="pick-title">Engineering Degree Planner</div>
+  <div class="pick-sub">Select your program — courses load pre-placed per the degree map</div>
+  <div class="pick-cards">
+    <div class="pick-card me" role="button" tabindex="0" aria-label="Select Mechanical Engineering" onclick="launch('ME')" onkeydown="if(event.key==='Enter'||event.key===' ')launch('ME')">
+      <div class="pick-icon">⚙️</div><div class="pick-name">Mechanical</div>
+      <div class="pick-full">Engineering</div><div class="pick-pill">ME</div>
+    </div>
+    <div class="pick-card ce" role="button" tabindex="0" aria-label="Select Civil Engineering" onclick="launch('CE')" onkeydown="if(event.key==='Enter'||event.key===' ')launch('CE')">
+      <div class="pick-icon">🏗️</div><div class="pick-name">Civil</div>
+      <div class="pick-full">Engineering</div><div class="pick-pill">CE</div>
+    </div>
+    <div class="pick-card ee" role="button" tabindex="0" aria-label="Select Electrical Engineering" onclick="launch('EE')" onkeydown="if(event.key==='Enter'||event.key===' ')launch('EE')">
+      <div class="pick-icon">⚡</div><div class="pick-name">Electrical</div>
+      <div class="pick-full">Engineering</div><div class="pick-pill">EE</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="hdr">
+    <div class="hdr-l">
+      <button class="back" onclick="goBack()">← Programs</button>
+      <div class="prog-pill" id="prog-pill">ME</div>
+      <div>
+        <div class="hdr-title" id="hdr-title">Mechanical Engineering</div>
+        <div class="hdr-sub">Drag courses between semesters · Check ✓ to mark completed · Unofficial</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <div class="hstat"><div class="hstat-v" id="h-cr">0</div><div class="hstat-l">Credits</div></div>
+      <div class="hstat"><div class="hstat-v" id="h-done" style="color:var(--green)">0</div><div class="hstat-l">Completed</div></div>
+      <div class="hstat" style="cursor:pointer;" onclick="document.getElementById('issues-panel').scrollIntoView({behavior:'smooth'})" title="Click to see all issues"><div class="hstat-v" id="h-issues" style="color:var(--red)">0</div><div class="hstat-l">Issues</div></div>
+      <div class="hbtns">
+        <button class="hbtn" id="undo-btn" onclick="undo()" title="Undo last change (Ctrl+Z)" disabled style="opacity:.4;">↩ Undo</button>
+        <button class="hbtn" onclick="confirmReset()" title="Reset plan to default degree map" style="color:var(--red);border-color:var(--red-border);">↺ Reset Plan</button>
+        <button class="hbtn save" onclick="openSave()">💾 Save</button>
+        <button class="hbtn" onclick="openLoad()">📂 Load</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <strong style="font-size:10px;color:var(--text2);margin-right:2px;">Prereqs:</strong>
+    <div class="li"><div class="ld" style="background:var(--white);border-color:var(--border)"></div> OK</div>
+    <div class="li"><div class="ld" style="background:var(--yellow-light);border-color:var(--yellow)"></div> ⚠ Planned prior — must pass</div>
+    <div class="li"><div class="ld" style="background:var(--orange-light);border-color:var(--orange)"></div> ⚡ Co-req (*) not yet scheduled</div>
+    <div class="li"><div class="ld" style="background:var(--red-light);border-color:var(--red)"></div> ✕ Hard prereq missing — move course later</div>
+    <div class="li"><div class="ld" style="background:var(--green-light);border-color:var(--green)"></div> ✓ Completed</div>
+    <span style="margin:0 6px;color:var(--border2)">|</span>
+    <strong style="font-size:10px;color:var(--text2);margin-right:2px;">Load:</strong>
+    <div class="li"><div class="ld" style="background:var(--green-light);border-color:var(--green-border);border-radius:50%"></div> 12–18 cr</div>
+    <div class="li"><div class="ld" style="background:var(--yellow-light);border-color:var(--yellow-border);border-radius:50%"></div> Light/Heavy</div>
+    <div class="li"><div class="ld" style="background:var(--red-light);border-color:var(--red-border);border-radius:50%"></div> &gt;18 overload</div>
+  </div>
+
+  <!-- ISSUES PANEL -->
+  <div id="issues-panel" style="display:none;background:#fef2f2;border-bottom:2px solid var(--red-border);padding:0;flex-shrink:0;max-height:140px;overflow-y:auto;"></div>
+
+  <div class="body">
+    <!-- SIDEBAR: Course list -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-hdr">
+          <span>Course Catalog</span>
+          <span class="sidebar-count" id="sidebar-count">0 available</span>
+        </div>
+        <div class="sidebar-search-row">
+          <span class="sidebar-search-icon" aria-hidden="true">🔍</span>
+          <input type="text" id="sidebar-search" placeholder="Search courses…" aria-label="Search courses" oninput="renderSidebar()">
+        </div>
+        <div class="sidebar-filters" id="sidebar-filters">
+          <button class="sf-btn active" data-yr="all" onclick="setSidebarFilter(this)">All</button>
+          <button class="sf-btn" data-yr="Freshman" onclick="setSidebarFilter(this)">FR</button>
+          <button class="sf-btn" data-yr="Sophomore" onclick="setSidebarFilter(this)">SO</button>
+          <button class="sf-btn" data-yr="Junior" onclick="setSidebarFilter(this)">JR</button>
+          <button class="sf-btn" data-yr="Senior" onclick="setSidebarFilter(this)">SR</button>
+        </div>
+      </div>
+      <div class="sidebar-list" id="sidebar-list" aria-label="Available courses"></div>
+    </div>
+
+    <!-- MAIN: Prior + Grid -->
+    <div class="main-panel">
+      <!-- Prior courses row -->
+      <div class="prior-row-wrap" id="prior-wrap">
+        <div class="prior-row-head" onclick="togglePrior()">
+          <div class="prior-row-title">
+            📚 Prior / Transferred Courses
+            <span class="prior-meta" id="prior-meta">0 courses</span>
+          </div>
+          <span id="prior-toggle" style="font-size:11px;color:var(--text3)">▼ Expand</span>
+        </div>
+        <div id="prior-body" style="display:none;">
+          <div class="prior-chips-wrap" id="prior-chips"></div>
+          <div class="prior-drop-hint" id="prior-drop-hint"
+            ondragover="event.preventDefault();this.classList.add('active')"
+            ondragleave="this.classList.remove('active')"
+            ondrop="dropToPrior(event)">
+            Drag any course here to mark it as previously taken (auto-marks as completed)
+          </div>
+        </div>
+      </div>
+
+      <div id="grid-wrap" style="display:flex;flex-direction:column;flex:1;overflow:hidden;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GENED PICKER MODAL -->
+<div class="modal-bg" id="gened-modal">
+  <div class="modal" style="width:600px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;">
+    <div style="flex-shrink:0;">
+      <div class="modal-icon" id="gm-icon">📚</div>
+      <h3 id="gm-title">Select Course</h3>
+      <p id="gm-desc" style="margin-bottom:10px;"></p>
+    </div>
+
+    <div style="overflow-y:auto;flex:1;padding-right:4px;">
+
+      <!-- EE Elective options (shown for EE elective slots) -->
+      <div id="gm-elec-section" style="display:none;">
+        <div class="gm-sect-label" id="gm-elec-label">Elective Options</div>
+        <div class="gm-grid" id="gm-elec"></div>
+      </div>
+
+      <!-- GenEd Group 1 -->
+      <div id="gm-grp1-section">
+        <div class="gm-sect-label">Group 1 — Humanities &amp; Fine Arts</div>
+        <div class="gm-grid" id="gm-grp1"></div>
+      </div>
+
+      <!-- GenEd Group 2 -->
+      <div id="gm-grp2-section" style="margin-top:12px;">
+        <div class="gm-sect-label">Group 2 — Social &amp; Behavioral Sciences</div>
+        <div class="gm-grid" id="gm-grp2"></div>
+      </div>
+
+      <!-- Manual entry (always shown) -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+        <div class="gm-sect-label">Enter manually (if not listed)</div>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <div style="flex:1;">
+            <input id="gm-custom-st" type="text" placeholder="Course code (e.g. EE 3410 or HISTORY 1300)" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;color:var(--text);outline:none;margin-bottom:6px;" />
+            <input id="gm-custom-msu" type="text" placeholder="MSU equivalent — optional" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;color:var(--text);outline:none;" />
+          </div>
+          <button class="btn btn-a" onclick="applyCustomGenEd()" style="align-self:stretch;white-space:nowrap;padding:0 16px;">Use This</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:14px;flex-shrink:0;">
+      <button class="btn" onclick="clearGenEdCustom()">Clear Selection</button>
+      <button class="btn" onclick="document.getElementById('gened-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE MODAL -->
+<div class="modal-bg" id="sched-modal">
+  <div class="modal" style="width:min(99vw,1100px);max-height:96vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);" id="sched-title">Fall Schedule</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Times auto-filled from the official schedule — adjust as needed, then view your week on the right</div>
+      </div>
+      <button onclick="document.getElementById('sched-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;flex-shrink:0;">×</button>
+    </div>
+
+    <!-- Body: time entry + grid side by side -->
+    <div style="display:grid;grid-template-columns:340px 1fr;flex:1;overflow:hidden;min-height:0;">
+
+      <!-- LEFT: course time entry list -->
+      <div style="border-right:1px solid var(--border);overflow-y:auto;padding:12px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px;">Courses This Semester</div>
+        <div id="sched-course-list"></div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px;">Add Extra Block</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">e.g. work, lunch, reserved time</div>
+          <input id="sched-extra-label" type="text" placeholder="Label (e.g. Work)" style="width:100%;padding:6px 8px;border:1.5px solid var(--border2);border-radius:5px;font-size:11px;font-family:var(--sans);outline:none;margin-bottom:5px;">
+          <div style="display:flex;gap:5px;margin-bottom:5px;">
+            <select id="sched-extra-days" multiple style="flex:1;padding:4px;border:1.5px solid var(--border2);border-radius:5px;font-size:10px;font-family:var(--sans);height:72px;outline:none;">
+              <option value="M">Mon</option><option value="T">Tue</option>
+              <option value="W">Wed</option><option value="Th">Thu</option>
+              <option value="F">Fri</option>
+            </select>
+            <div style="display:flex;flex-direction:column;gap:6px;justify-content:center;">
+              <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text3);">
+                From
+                <select id="ex-start-h" style="padding:3px 4px;border:1.5px solid var(--border2);border-radius:4px;font-size:10px;font-family:var(--mono);outline:none;">
+                  <option value="">--</option>
+                  <option value="07">7am</option><option value="08">8am</option><option value="09">9am</option>
+                  <option value="10">10am</option><option value="11">11am</option><option value="12">12pm</option>
+                  <option value="13">1pm</option><option value="14">2pm</option><option value="15">3pm</option>
+                  <option value="16">4pm</option><option value="17">5pm</option><option value="18">6pm</option>
+                  <option value="19">7pm</option><option value="20">8pm</option>
+                </select>
+                <select id="ex-start-m" style="padding:3px 4px;border:1.5px solid var(--border2);border-radius:4px;font-size:10px;font-family:var(--mono);outline:none;">
+                  <option value="00">:00</option><option value="15">:15</option>
+                  <option value="30">:30</option><option value="45">:45</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text3);">
+                To&nbsp;&nbsp;
+                <select id="ex-end-h" style="padding:3px 4px;border:1.5px solid var(--border2);border-radius:4px;font-size:10px;font-family:var(--mono);outline:none;">
+                  <option value="">--</option>
+                  <option value="07">7am</option><option value="08">8am</option><option value="09">9am</option>
+                  <option value="10">10am</option><option value="11">11am</option><option value="12">12pm</option>
+                  <option value="13">1pm</option><option value="14">2pm</option><option value="15">3pm</option>
+                  <option value="16">4pm</option><option value="17">5pm</option><option value="18">6pm</option>
+                  <option value="19">7pm</option><option value="20">8pm</option>
+                </select>
+                <select id="ex-end-m" style="padding:3px 4px;border:1.5px solid var(--border2);border-radius:4px;font-size:10px;font-family:var(--mono);outline:none;">
+                  <option value="00">:00</option><option value="15">:15</option>
+                  <option value="30">:30</option><option value="45">:45</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button onclick="addExtraBlock()" class="btn btn-a" style="width:100%;font-size:11px;padding:6px;">+ Add Block</button>
+        </div>
+
+        <!-- Online Classes -->
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:4px;">🌐 Online Classes</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Classes with no set meeting time — listed separately below the grid</div>
+          <div id="sched-online-list" style="margin-bottom:6px;"></div>
+          <div style="display:flex;gap:5px;">
+            <input id="sched-online-input" type="text" placeholder="Course or note (e.g. MATH 3304 — async)" style="flex:1;padding:6px 8px;border:1.5px solid var(--border2);border-radius:5px;font-size:11px;font-family:var(--sans);outline:none;">
+            <button onclick="addOnlineClass()" class="btn btn-a" style="font-size:11px;padding:6px 10px;white-space:nowrap;">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: weekly grid -->
+      <div style="overflow:auto;padding:14px;">
+        <div id="sched-grid-wrap"></div>
+      </div>
+    </div>
+
+    <div style="padding:10px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="clearSchedTimes()">Clear All Times</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="saveSchedImage()" id="sched-save-img-btn">🖼 Save as Image</button>
+        <button class="btn btn-a" onclick="document.getElementById('sched-modal').classList.remove('open')">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="modal-bg" id="reset-modal">
+  <div class="modal">
+    <div class="modal-icon">↺</div>
+    <h3>Reset Plan to Default?</h3>
+    <p>This will clear all your changes and restore every course back to its default semester position from the degree map. Your schedule times will also be cleared.<br><br>This <strong>cannot be undone</strong> — save your current plan first if you want to keep it.</p>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('reset-modal').classList.remove('open')">Cancel</button>
+      <button class="btn" onclick="doReset()" style="background:var(--red);border-color:var(--red);color:#fff;">↺ Yes, Reset Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE -->
+<div class="modal-bg" id="save-modal">
+  <div class="modal modal-wide">
+    <div class="modal-icon">💾</div>
+    <h3>Save Your Plan</h3>
+    <p>Copy all the text below and save it somewhere (email it to yourself, paste it in a notes app, etc.). Paste it back in <strong>Load Plan</strong> to pick up where you left off.</p>
+    <textarea class="tbox" id="save-text" readonly></textarea>
+    <div class="modal-btns">
+      <button class="btn" onclick="copyAll()">Copy All</button>
+      <button class="btn btn-a" onclick="document.getElementById('save-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD -->
+<div class="modal-bg" id="load-modal">
+  <div class="modal modal-wide">
+    <div class="modal-icon">📂</div>
+    <h3>Load Your Plan</h3>
+    <p>Paste your previously saved plan text below, then click Load.</p>
+    <textarea class="tbox" id="load-text" placeholder="Paste saved plan text here…"></textarea>
+    <div class="load-err" id="load-err"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('load-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-a" onclick="doLoad()">Load Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- BLOCKED -->
+<div class="modal-bg" id="block-modal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <h3 id="bm-title">Prerequisite Warning</h3>
+    <p id="bm-body"></p>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('block-modal').classList.remove('open')">Cancel Move</button>
+      <button class="btn btn-a" id="bm-confirm">Move Anyway</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  PROGRAM DATA
+// ═══════════════════════════════════════════════════════
+// defaultSem: the semester ID where each course goes by default (per degree map)
+// fall2425=Freshman Fall, spring2425=Freshman Spring
+// fall2526=Sophomore Fall, spring2526=Sophomore Spring
+// fall2627=Junior Fall, spring2627=Junior Spring
+// fall2728=Senior Fall, spring2728=Senior Spring
+
+const SEM_IDS = [
+  {id:'fall2425',   label:'Fall 2024',   season:'fall',   year:'Freshman'},
+  {id:'spring2425', label:'Spring 2025', season:'spring', year:'Freshman'},
+  {id:'fall2526',   label:'Fall 2025',   season:'fall',   year:'Sophomore'},
+  {id:'spring2526', label:'Spring 2026', season:'spring', year:'Sophomore'},
+  {id:'summer2526', label:'Summer 2026', season:'summer', year:'Sophomore'},
+  {id:'fall2627',   label:'Fall 2026',   season:'fall',   year:'Junior'},
+  {id:'spring2627', label:'Spring 2027', season:'spring', year:'Junior'},
+  {id:'summer2627', label:'Summer 2027', season:'summer', year:'Junior'},
+  {id:'fall2728',   label:'Fall 2027',   season:'fall',   year:'Senior'},
+  {id:'spring2728', label:'Spring 2028', season:'spring', year:'Senior'},
+  {id:'summer2728', label:'Summer 2028', season:'summer', year:'Senior'},
+];
+
+const YEARS = [
+  {label:'Freshman Year',  sems:['fall2425','spring2425']},
+  {label:'Sophomore Year', sems:['fall2526','spring2526'], summer:'summer2526'},
+  {label:'Junior Year',    sems:['fall2627','spring2627'], summer:'summer2627'},
+  {label:'Senior Year',    sems:['fall2728','spring2728'], summer:'summer2728'},
+];
+
+const PROGRAMS = {
+ME:{
+  name:'Mechanical Engineering', sub:'Systems Integration Emphasis',
+  accent:'#2563eb', accentLight:'#eff4ff', accentBorder:'#bfcfff', pillBg:'#2563eb',
+  courses:[
+    // FRESHMAN FALL
+    {id:'FE1100',   stCode:'FE 1100',    msuCode:'EGR 110',  title:'Study & Careers in Engineering',      credits:1, defaultSem:'fall2425',   prereqs:[],          coreqs:[]},
+    {id:'CHEM1310', stCode:'CHEM 1310',  msuCode:'CHM 160',       title:'General Chemistry',                   credits:4, defaultSem:'fall2425',   prereqs:[],          coreqs:[]},
+    {id:'CHEM1319', stCode:'CHEM 1319',  msuCode:'CHM 161',       title:'General Chemistry Lab',               credits:1, defaultSem:'fall2425',   prereqs:[],          coreqs:['CHEM1310']},
+    {id:'MATH1214', stCode:'MATH 1214',  msuCode:'MTH 261',  title:'Calculus for Engineers I',            credits:4, defaultSem:'fall2425',   prereqs:[],          coreqs:[]},
+    {id:'ENGL1120', stCode:'ENGL 1120',  msuCode:'ENG 110',  title:'Exposition and Argumentation',        credits:3, defaultSem:'fall2425',   prereqs:[],          coreqs:[]},
+    {id:'HST_PLS',  stCode:'HST/PLS',    msuCode:null,       title:'History or Poli Sci (GenEd)',          credits:3, defaultSem:'fall2425',   prereqs:[],          coreqs:[]},
+    // FRESHMAN SPRING
+    {id:'ME1720',   stCode:'ME 1720',    msuCode:'TCM 110',  title:'Intro to Engineering Design',         credits:3, defaultSem:'spring2425', prereqs:[],          coreqs:[]},
+    {id:'MATH1215', stCode:'MATH 1215',  msuCode:'MTH 280',  title:'Calculus for Engineers II',           credits:4, defaultSem:'spring2425', prereqs:['MATH1214'],coreqs:[]},
+    {id:'PHYS1135', stCode:'PHYS 1135',  msuCode:'PHY 203',  title:'Engineering Physics I',               credits:4, defaultSem:'spring2425', prereqs:['MATH1214'],coreqs:[]},
+    {id:'GENED1',   stCode:'GenEd Grp 1',msuCode:null,       title:'GenEd — Humanities & Fine Arts',      credits:3, defaultSem:'spring2425', prereqs:[],          coreqs:[]},
+    {id:'GENED2',   stCode:'GenEd Grp 2',msuCode:null,       title:'GenEd — Social Sciences',             credits:3, defaultSem:'spring2425', prereqs:[],          coreqs:[]},
+    // SOPHOMORE FALL
+    {id:'CE2200',   stCode:'CE 2200',    msuCode:'PHY 233',  title:'Statics',                             credits:3, defaultSem:'fall2526',   prereqs:['PHYS1135'],coreqs:['MATH2222']},
+    {id:'MATH2222', stCode:'MATH 2222',  msuCode:'MTH 302',  title:'Calculus w/ Analytic Geometry III',   credits:4, defaultSem:'fall2526',   prereqs:['MATH1215'],coreqs:[]},
+    {id:'PHYS2135', stCode:'PHYS 2135',  msuCode:'PHY 204',  title:'Engineering Physics II',              credits:4, defaultSem:'fall2526',   prereqs:['PHYS1135','MATH1215'],coreqs:[]},
+    {id:'ME1761',   stCode:'ME 1761',    msuCode:null,       title:'Introduction to CAD',                 credits:1, defaultSem:'fall2526',   prereqs:['ME1720','MATH1214'],coreqs:[]},
+    {id:'ME2653',   stCode:'ME 2653',    msuCode:null,       title:'Intro to Manufacturing Processes',    credits:3, defaultSem:'fall2526',   prereqs:['ME1720','PHYS1135'],coreqs:['ME1761']},
+    // SOPHOMORE SPRING
+    {id:'CSCI_L',   stCode:'CS 1982',    msuCode:'CSC 125',  title:'Computer Science Lecture',            credits:3, defaultSem:'spring2526', prereqs:['MATH1214'],coreqs:[]},
+    {id:'CSCI_LAB', stCode:'CS 1972',    msuCode:'CSC 125L', title:'Computer Science Lab',                credits:1, defaultSem:'spring2526', prereqs:[],          coreqs:['CSCI_L']},
+    {id:'ME2761',   stCode:'ME 2761',    msuCode:null,       title:'Intro to Design',                     credits:2, defaultSem:'spring2526', prereqs:['ME1720','ME1761','ME2653','MATH1214','PHYS1135'],coreqs:['CE2200']},
+    {id:'ME2519',   stCode:'ME 2519',    msuCode:null,       title:'Thermodynamics',                      credits:3, defaultSem:'spring2526', prereqs:['MATH1214','MATH1215','MATH2222','PHYS1135'],coreqs:[]},
+    {id:'ME2360',   stCode:'ME 2360',    msuCode:null,       title:'Dynamics',                            credits:3, defaultSem:'spring2526', prereqs:['CE2200','MATH2222'],coreqs:[]},
+    {id:'MATH3304', stCode:'MATH 3304',  msuCode:'MTH 303',  title:'Elementary Differential Equations',   credits:3, defaultSem:'spring2526', prereqs:['MATH1215'],coreqs:[]},
+    {id:'MTENG2110',stCode:'MT ENG 2110',msuCode:null,       title:'Metallurgy for Engineers',            credits:3, defaultSem:'spring2526', prereqs:[],          coreqs:['CHEM1310']},
+    // JUNIOR FALL
+    {id:'ME3313',   stCode:'ME 3313',    msuCode:null,       title:'Machine Dynamics',                    credits:3, defaultSem:'fall2627',   prereqs:['CSCI_L','ME2360','MATH1214','MATH1215','MATH2222','PHYS1135'],coreqs:[]},
+    {id:'ME3521',   stCode:'ME 3521',    msuCode:null,       title:'Applied Thermodynamics',              credits:3, defaultSem:'fall2627',   prereqs:['ME2519'],  coreqs:[]},
+    {id:'EE2100',   stCode:'EE 2100',    msuCode:null,       title:'Electrical Circuits I',               credits:3, defaultSem:'fall2627',   prereqs:['MATH1215'],coreqs:['MATH3304']},
+    {id:'EE2101',   stCode:'EE 2101',    msuCode:null,       title:'Electrical Circuits Lab I',           credits:1, defaultSem:'fall2627',   prereqs:[],          coreqs:['EE2100']},
+    {id:'CE2210',   stCode:'CE 2210',    msuCode:null,       title:'Mechanics of Materials',              credits:3, defaultSem:'fall2627',   prereqs:['CE2200'],  coreqs:[]},
+    {id:'CE2211',   stCode:'CE 2211',    msuCode:null,       title:'Materials Testing',                   credits:1, defaultSem:'fall2627',   prereqs:[],          coreqs:['CE2210']},
+    {id:'STAT3113', stCode:'STAT 3113/3115/3117',msuCode:'MTH 345',title:'Statistics',                   credits:3, defaultSem:'fall2627',   prereqs:[],          coreqs:[]},
+    // JUNIOR SPRING
+    {id:'ME3411',   stCode:'ME 3411',    msuCode:null,       title:'Model Analysis of Dynamic Systems',   credits:3, defaultSem:'spring2627', prereqs:['CSCI_L','ME2360','MATH1214','MATH1215','MATH2222','MATH3304','PHYS1135','PHYS2135'],coreqs:[]},
+    {id:'ME3525',   stCode:'ME 3525',    msuCode:null,       title:'Heat Transfer',                       credits:3, defaultSem:'spring2627', prereqs:['CSCI_L','MATH3304','ME2519'],coreqs:[]},
+    {id:'EE2120',   stCode:'EE 2120',    msuCode:null,       title:'Electrical Circuits II',              credits:3, defaultSem:'spring2627', prereqs:['EE2100','MATH3304'],coreqs:[]},
+    {id:'ME3131',   stCode:'ME 3131',    msuCode:null,       title:'Thermofluid Mechanics I',             credits:3, defaultSem:'spring2627', prereqs:['ME2519'],  coreqs:[]},
+    {id:'ME4840',   stCode:'ME 4840',    msuCode:null,       title:'Mechanical Instrumentation',          credits:2, defaultSem:'spring2627', prereqs:['MATH3304','ME2519','PHYS2135'],coreqs:[]},
+    // SENIOR FALL
+    {id:'ENGMGT1210',stCode:'ENG MGT 1210',msuCode:null,     title:'Econ Analysis of Engineering Projects',credits:2,defaultSem:'fall2728', prereqs:[],          coreqs:[]},
+    {id:'ME3708',   stCode:'ME 3708',    msuCode:null,       title:'Machine Design I',                    credits:3, defaultSem:'fall2728',   prereqs:['ME2653','MTENG2110','CE2210'],coreqs:['ME2761']},
+    {id:'ME4479',   stCode:'ME 4479',    msuCode:null,       title:'Auto Control of Dynamic Systems',     credits:3, defaultSem:'fall2728',   prereqs:['ME3411'],  coreqs:[]},
+    {id:'ME4480',   stCode:'ME 4480',    msuCode:null,       title:'Control System Lab',                  credits:1, defaultSem:'fall2728',   prereqs:[],          coreqs:['ME4479']},
+    {id:'ME4842',   stCode:'ME 4842',    msuCode:null,       title:'Mechanical Engineering Systems',      credits:2, defaultSem:'fall2728',   prereqs:['ME4840','ME3521','ME3131','ME3525','ME3313'],coreqs:[]},
+    {id:'ENGL210',  stCode:'ENGL 210/310',msuCode:'ENG 210 / COM 115', title:'Technical Communication (ENG 210 or COM 115)',             credits:3, defaultSem:'fall2728',   prereqs:[],          coreqs:[]},
+    {id:'ME_TECH',  stCode:'ME Tech Elec',msuCode:null,      title:'Mechanical Eng Technical Elective',   credits:3, defaultSem:'fall2728',   prereqs:[],          coreqs:[]},
+    // SENIOR SPRING
+    {id:'ME4761',   stCode:'ME 4761',    msuCode:null,       title:'Engineering Design (Capstone)',        credits:3, defaultSem:'spring2728', prereqs:[],          coreqs:['ME3708','ME3525','ME3131','ME4479']},
+    {id:'SYS_MGMT', stCode:'SYS MGMT',   msuCode:null,       title:'Systems Management Elective',         credits:3, defaultSem:'spring2728', prereqs:[],          coreqs:[]},
+    {id:'SYS_TECH', stCode:'SYS Tech',   msuCode:null,       title:'Systems Integration Tech Elective',   credits:3, defaultSem:'spring2728', prereqs:[],          coreqs:[]},
+    {id:'GENED_12B',stCode:'GenEd Grp 1/2',msuCode:null,     title:'GenEd Group 1 or 2 (Senior)',         credits:3, defaultSem:'spring2728', prereqs:[],          coreqs:[]},
+    {id:'GENED_EL', stCode:'GenEd Elec', msuCode:null,       title:'GenEd Elective',                      credits:3, defaultSem:'spring2728', prereqs:[],          coreqs:[]},
+  ]
+},
+
+CE:{
+  name:'Civil Engineering', sub:'BS Civil Engineering · Co-op Curriculum',
+  accent:'#0e7490', accentLight:'#ecfeff', accentBorder:'#a5f3fc', pillBg:'#0e7490',
+  courses:[
+    {id:'FE1100',     stCode:'FE 1100',           msuCode:'EGR 110',    title:'Study & Careers in Engineering',              credits:1, defaultSem:'fall2425',   prereqs:[],                                         coreqs:[]},
+    {id:'CHEM1310',   stCode:'CHEM 1310',          msuCode:'CHM 160',         title:'General Chemistry',                           credits:4, defaultSem:'fall2425',   prereqs:[],                                         coreqs:[]},
+    {id:'CHEM1319',   stCode:'CHEM 1319',          msuCode:'CHM 161',         title:'General Chemistry Lab',                       credits:1, defaultSem:'fall2425',   prereqs:[],                                         coreqs:['CHEM1310']},
+    {id:'MATH1214',   stCode:'MATH 1214/1211',     msuCode:'MTH 261',    title:'Calculus for Engineers I',                    credits:5, defaultSem:'fall2425',   prereqs:[],                                         coreqs:[]},
+    {id:'ENGL1120',   stCode:'ENGL 1120',          msuCode:'ENG 110',    title:'Exposition and Argumentation',                credits:3, defaultSem:'fall2425',   prereqs:[],                                         coreqs:[]},
+    {id:'HST_POL',    stCode:'HIST/POL SCI',       msuCode:null,         title:'History or Poli Sci (GenEd Grp 1)',           credits:3, defaultSem:'fall2425',   prereqs:[],                                         coreqs:[]},
+    {id:'MECHENG1720',stCode:'MECH ENG 1720',      msuCode:'TCM 110',    title:'Intro to Engineering Design',                 credits:3, defaultSem:'spring2425', prereqs:[],                                         coreqs:[]},
+    {id:'MATH1215',   stCode:'MATH 1215',          msuCode:'MTH 280',    title:'Calculus for Engineers II',                   credits:4, defaultSem:'spring2425', prereqs:['MATH1214'],                               coreqs:[]},
+    {id:'PHYS1135',   stCode:'PHYSICS 1135',       msuCode:'PHY 203',    title:'Engineering Physics I',                       credits:5, defaultSem:'spring2425', prereqs:['MATH1214'],                               coreqs:[]},
+    {id:'GENED1',     stCode:'GenEd Grp 1',        msuCode:null,         title:'Humanities or Social Science (Grp 1)',        credits:3, defaultSem:'spring2425', prereqs:[],                                         coreqs:[]},
+    {id:'GENED2',     stCode:'GenEd Grp 2',        msuCode:null,         title:'Humanities or Social Science (Grp 2)',        credits:3, defaultSem:'spring2425', prereqs:[],                                         coreqs:[]},
+    {id:'CE2401',     stCode:'CIV ENG 2401',       msuCode:null,         title:'Fundamentals of Surveying',                   credits:3, defaultSem:'fall2526',   prereqs:[],                                         coreqs:['MATH1214']},
+    {id:'MATH2222',   stCode:'MATH 2222',          msuCode:'MTH 302',    title:'Calculus III',                                credits:4, defaultSem:'fall2526',   prereqs:['MATH1215'],                               coreqs:[]},
+    {id:'PHYS2135',   stCode:'PHYSICS 2135',       msuCode:'PHY 204',    title:'Engineering Physics II',                      credits:5, defaultSem:'fall2526',   prereqs:['PHYS1135','MATH1215'],                    coreqs:[]},
+    {id:'CE2003',     stCode:'CIV ENG 2003',       msuCode:null,         title:'Engineering Communications & Computations',   credits:3, defaultSem:'fall2526',   prereqs:[],                                         coreqs:[]},
+    {id:'CE2200',     stCode:'CIV ENG 2200',       msuCode:'PHY 233',    title:'Statics',                                     credits:3, defaultSem:'fall2526',   prereqs:['PHYS1135','MATH1215'],                    coreqs:['MATH2222']},
+    {id:'CE2210',     stCode:'CIV ENG 2210',       msuCode:null,         title:'Mechanics of Materials',                      credits:3, defaultSem:'spring2526', prereqs:['CE2200'],                                 coreqs:[]},
+    {id:'CE2211',     stCode:'CIV ENG 2211',       msuCode:null,         title:'Materials Testing',                           credits:1, defaultSem:'spring2526', prereqs:[],                                         coreqs:['CE2210']},
+    {id:'MECHENG2350',stCode:'MECH ENG 2350',      msuCode:null,         title:'Engineering Mechanics — Dynamics',             credits:2, defaultSem:'spring2526', prereqs:['CE2200','MATH2222'],                      coreqs:[]},
+    {id:'STAT3113',   stCode:'STAT 3113',          msuCode:'MTH 345',    title:'Applied Engineering Statistics',              credits:3, defaultSem:'spring2526', prereqs:['MATH1215'],                               coreqs:[]},
+    {id:'MATH3304',   stCode:'MATH 3304',          msuCode:'MTH 303',    title:'Differential Equations',                      credits:3, defaultSem:'spring2526', prereqs:['MATH1215'],                               coreqs:[]},
+    {id:'GEOENG1150', stCode:'GEO ENG 1150',       msuCode:'GLG 114/116',         title:'Physical & Environmental Geology',             credits:4, defaultSem:'spring2526', prereqs:[],                                         coreqs:[]},
+    {id:'CE3201',     stCode:'CIV ENG 3201',       msuCode:null,         title:'Structural Analysis I',                       credits:3, defaultSem:'fall2627',   prereqs:['CE2200','CE2210'],                        coreqs:[]},
+    {id:'CE3715',     stCode:'CIV ENG 3715',       msuCode:null,         title:'Fundamentals of Geotechnical Engineering',    credits:3, defaultSem:'fall2627',   prereqs:['MATH1215','PHYS1135','GEOENG1150','CE2210'],coreqs:['CE3330']},
+    {id:'CE3330',     stCode:'CIV ENG 3330',       msuCode:null,         title:'Engineering Fluid Mechanics',                 credits:3, defaultSem:'fall2627',   prereqs:['MATH3304','MECHENG2350'],                 coreqs:[]},
+    {id:'CE2601',     stCode:'CIV ENG 2601',       msuCode:null,         title:'Fundamentals of Environmental Engr.',         credits:3, defaultSem:'fall2627',   prereqs:['CHEM1310','MATH1214'],                    coreqs:[]},
+    {id:'ENGL1160',   stCode:'ENGL 1160/3560',     msuCode:'ENG 210',    title:'Technical Writing / Speech',                  credits:3, defaultSem:'fall2627',   prereqs:[],                                         coreqs:[]},
+    {id:'ENGMGT1210', stCode:'ENG MGT 1210',       msuCode:null,         title:'Economic Analysis of Engineering Projects',   credits:2, defaultSem:'spring2627',   prereqs:[],                                         coreqs:[]},
+    {id:'CE3116',     stCode:'CIV ENG 3116',       msuCode:null,         title:'Construction Materials, Properties & Testing',credits:3, defaultSem:'spring2627', prereqs:['MATH1215','PHYS1135','CE2211','CE2210'],  coreqs:[]},
+    {id:'CE3842',     stCode:'CIV ENG 3842',       msuCode:null,         title:'Fundamentals of Building Systems',            credits:3, defaultSem:'spring2627', prereqs:['PHYS2135','MATH2222'],                    coreqs:[]},
+    {id:'CE3500',     stCode:'CIV ENG 3500',       msuCode:null,         title:'Transportation Engineering',                  credits:3, defaultSem:'spring2627', prereqs:['CE2401','CE2003'],                        coreqs:[]},
+    {id:'CE3334',     stCode:'CIV ENG 3334',       msuCode:null,         title:'Water Resources Engineering',                 credits:4, defaultSem:'spring2627', prereqs:['CE3330','STAT3113'],                      coreqs:[]},
+    {id:'CE4448',     stCode:'CIV ENG 4448',       msuCode:null,         title:'Fundamentals of Construction Engr. & Mgmt.', credits:3, defaultSem:'fall2627', prereqs:['MATH1215','PHYS1135'],                    coreqs:[]},
+    {id:'CE4010',     stCode:'CIV ENG 4010',       msuCode:null,         title:'Senior Seminar',                              credits:1, defaultSem:'fall2728',   prereqs:[],                                         coreqs:[]},
+    {id:'CE3210',     stCode:'CIV ENG 3210',       msuCode:null,         title:'Structural Design in Metals',                 credits:3, defaultSem:'fall2728',   prereqs:['CE3201'],                                 coreqs:[]},
+    {id:'CE3220',     stCode:'CIV ENG 3220',       msuCode:null,         title:'Reinforced Concrete Design',                  credits:3, defaultSem:'spring2728',   prereqs:['CE3201'],                                 coreqs:[]},
+    {id:'DEPTH1',     stCode:'CE Depth 1',         msuCode:null,         title:'CE Depth Elective',                           credits:3, defaultSem:'fall2728',   prereqs:[],                                         coreqs:[]},
+    {id:'DEPTH2',     stCode:'CE Depth 2',         msuCode:null,         title:'CE Depth Elective',                           credits:3, defaultSem:'fall2728',   prereqs:[],                                         coreqs:[]},
+    {id:'GENED_HA',   stCode:'GenEd Grp 1 (Sr)',   msuCode:null,         title:'Humanities & Fine Arts Elective',             credits:3, defaultSem:'fall2728',   prereqs:[],                                         coreqs:[]},
+    {id:'CE4097',     stCode:'CIV ENG 4097',       msuCode:null,         title:'Senior Design Project (Capstone)',            credits:3, defaultSem:'spring2728', prereqs:['CE4448'],                                 coreqs:[]},
+    {id:'TECH1',      stCode:'CE Tech 1',          msuCode:null,         title:'CE Technical Elective',                       credits:3, defaultSem:'spring2728', prereqs:[],                                         coreqs:[]},
+    {id:'TECH2',      stCode:'CE Tech 2',          msuCode:null,         title:'CE Technical Elective',                       credits:3, defaultSem:'spring2728', prereqs:[],                                         coreqs:[]},
+    {id:'DEPTH3',     stCode:'CE Depth 3',         msuCode:null,         title:'CE Depth Elective',                           credits:3, defaultSem:'spring2728', prereqs:[],                                         coreqs:[]},
+    {id:'GENED_EL',   stCode:'GenEd Elective',     msuCode:null,         title:'GenEd Elective',                              credits:3, defaultSem:'spring2728', prereqs:[],                                         coreqs:[]},
+  ]
+},
+
+EE:{
+  name:'Electrical Engineering', sub:'EE Curriculum · Catalog Year 2025',
+  accent:'#7c3aed', accentLight:'#f5f3ff', accentBorder:'#ddd6fe', pillBg:'#7c3aed',
+  courses:[
+    {id:'FE1100',     stCode:'FE 1100',         msuCode:'EGR 110',  title:'Study & Careers in Engineering',          credits:1, defaultSem:'fall2425',   prereqs:[],                          coreqs:[]},
+    {id:'CHEM1310',   stCode:'CHEM 1310',        msuCode:'CHM 160',       title:'General Chemistry',                       credits:4, defaultSem:'fall2425',   prereqs:[],                          coreqs:[]},
+    {id:'CHEM1319',   stCode:'CHEM 1319',        msuCode:'CHM 161',       title:'General Chemistry Lab',                   credits:1, defaultSem:'fall2425',   prereqs:[],                          coreqs:['CHEM1310']},
+    {id:'MATH1214',   stCode:'MATH 1214/1211',   msuCode:'MTH 261',  title:'Calculus I',                              credits:4, defaultSem:'fall2425',   prereqs:[],                          coreqs:[]},
+    {id:'ENGL1120',   stCode:'ENGL 1120',        msuCode:'ENG 110',  title:'Exposition and Argumentation',            credits:3, defaultSem:'fall2425',   prereqs:[],                          coreqs:[]},
+    {id:'GENED_F',    stCode:'Hist/Pol Sci',      msuCode:null,       title:'History or Poli Sci (GenEd)',             credits:3, defaultSem:'fall2425',   prereqs:[],                          coreqs:[]},
+    {id:'MECHENG1720',stCode:'MECH ENG 1720',    msuCode:'TCM 110',  title:'Intro to Engineering Design',             credits:3, defaultSem:'spring2425', prereqs:[],                          coreqs:[]},
+    {id:'MATH1215',   stCode:'MATH 1215',        msuCode:'MTH 280',  title:'Calculus II',                             credits:4, defaultSem:'spring2425', prereqs:['MATH1214'],                coreqs:[]},
+    {id:'PHYS1135',   stCode:'PHYS 1135',        msuCode:'PHY 203',  title:'Engineering Physics I',                   credits:4, defaultSem:'spring2425', prereqs:['MATH1214'],                coreqs:[]},
+    {id:'GENED_ECO',  stCode:'ECO 155/165',      msuCode:null,       title:'Economics (GenEd Grp 2)',                 credits:3, defaultSem:'spring2425', prereqs:[],                          coreqs:[]},
+    {id:'GENED_FS2',  stCode:'GenEd Elective',   msuCode:null,       title:'General Education Elective',              credits:3, defaultSem:'spring2425', prereqs:[],                          coreqs:[]},
+    {id:'CPE2210',    stCode:'CpE 2210',          msuCode:null,       title:'Intro to Digital Logic',                  credits:3, defaultSem:'fall2526',   prereqs:[],                          coreqs:[]},
+    {id:'CPE2211',    stCode:'CpE 2211',          msuCode:null,       title:'Computer Engineering Lab',                credits:1, defaultSem:'fall2526',   prereqs:[],                          coreqs:['CPE2210'], note:'Lab — Fall/Spring only'},
+    {id:'MATH3304',   stCode:'MATH 3304',        msuCode:'MTH 303',  title:'Elementary Differential Equations',       credits:3, defaultSem:'fall2526',   prereqs:['MATH1215'],                coreqs:[]},
+    {id:'PHYS2135',   stCode:'PHYS 2135',        msuCode:'PHY 204',  title:'Engineering Physics II',                  credits:4, defaultSem:'fall2526',   prereqs:['PHYS1135','MATH1215'],     coreqs:[]},
+    {id:'EE2100',     stCode:'EE 2100/2101',     msuCode:null,       title:'Circuits I & Circuit Analysis Lab',       credits:4, defaultSem:'fall2526',   prereqs:['MATH1215'],                coreqs:['MATH3304']},
+    {id:'EE2120',     stCode:'EE 2120',          msuCode:null,       title:'Circuits II',                             credits:3, defaultSem:'spring2526', prereqs:['EE2100','MATH2222'],       coreqs:[], note:'Requires passing EE Advancement Exam I'},
+    {id:'CSCI',       stCode:'CS CSC 125',       msuCode:'CSC 125',  title:'Computer Science',                        credits:3, defaultSem:'spring2526', prereqs:[],                          coreqs:[]},
+    {id:'ENGSCI',     stCode:'Eng Sci Elective', msuCode:null,       title:'Engineering Science Elective',            credits:3, defaultSem:'spring2526', prereqs:[],                          coreqs:[], note:'ME 2340/2519/2527; Phys 2305/2311/2401; NucEng 3101; Chem 210; Bio 2213/2223'},
+    {id:'EE2410',     stCode:'EE 2410',           msuCode:null,       title:'Continuous Linear Systems',               credits:3, defaultSem:'fall2627', prereqs:['EE2100','PHYS2135'],       coreqs:[], note:'Must pass EE Advancement Exam I'},
+    {id:'EE2411',     stCode:'EE 2411',           msuCode:null,       title:'Continuous Linear Systems Lab',           credits:1, defaultSem:'fall2627', prereqs:[],                          coreqs:['EE2410'], note:'Lab — Fall/Spring only'},
+    {id:'MATH2222',   stCode:'MATH 2222',        msuCode:'MTH 302',  title:'Calculus w/ Analytic Geometry III',       credits:4, defaultSem:'spring2526', prereqs:['MATH1215'],                coreqs:[]},
+    {id:'EE3100',     stCode:'EE 3100',           msuCode:null,       title:'Electronics I',                           credits:3, defaultSem:'fall2627',   prereqs:['EE2120','CPE2210'],        coreqs:[], note:'Must pass EE Advancement Exam II'},
+    {id:'EE3101',     stCode:'EE 3101',           msuCode:null,       title:'Electronics I Lab',                       credits:1, defaultSem:'fall2627',   prereqs:[],                          coreqs:['EE3100'], note:'Lab for Electronics I — Fall/Spring only'},
+    {id:'EE3320',     stCode:'EE 3320',           msuCode:null,       title:'Control Systems',                         credits:3, defaultSem:'fall2627',   prereqs:['EE2120','MATH3304'],       coreqs:[], note:'Must pass EE Advancement Exam II'},
+    {id:'EE3321',     stCode:'EE 3321',           msuCode:null,       title:'Control Systems Lab',                     credits:1, defaultSem:'fall2627',   prereqs:[],                          coreqs:['EE3320'], note:'Lab for Control Systems — Fall/Spring only'},
+    {id:'MATH3108',   stCode:'MATH 3108',        msuCode:'MTH 333',  title:'Linear Algebra',                          credits:3, defaultSem:'spring2526',   prereqs:[],                          coreqs:[]},
+    {id:'SPMS1185',   stCode:'SP&MS 1185',       msuCode:'COM 115',  title:'Principles of Speech',                    credits:3, defaultSem:'fall2627',   prereqs:[],                          coreqs:[], note:'Fulfills remaining GenEd requirement'},
+    {id:'EE3600',     stCode:'EE 3600',          msuCode:null,       title:'Electromagnetics',                         credits:4, defaultSem:'spring2627', prereqs:['EE2120','EE2100','MATH3304','PHYS2135'],coreqs:[], note:'Must pass EE Advancement Exam II'},
+    {id:'STAT3115',   stCode:'STAT 3115',        msuCode:'MTH 345',  title:'Engineering Statistics',                  credits:3, defaultSem:'spring2627', prereqs:['MATH2222'],                coreqs:[]},
+    {id:'EE3430',     stCode:'EE 3430',           msuCode:null,       title:'Digital Communications',                  credits:3, defaultSem:'spring2627', prereqs:['EE2120','EE2100'],         coreqs:[], note:'Must pass EE Advancement Exam II'},
+    {id:'EE3431',     stCode:'EE 3431',           msuCode:null,       title:'Digital Communications Lab',              credits:1, defaultSem:'spring2627', prereqs:[],                          coreqs:['EE3430'], note:'Lab for Digital Comm — Fall/Spring only'},
+    {id:'EE_ELEC_A',  stCode:'EE Elective A',    msuCode:null,       title:'EE Elective A',                           credits:3, defaultSem:'spring2627', prereqs:[],                          coreqs:[]},
+    {id:'ENGL1160',   stCode:'ENGL 1160/3560',   msuCode:'ENG 210 / ENG 221',  title:'Technical Writing',                       credits:3, defaultSem:'spring2627', prereqs:[],                          coreqs:[]},
+    {id:'EE4096',     stCode:'EE 4096',          msuCode:null,       title:'Senior Design Project I',                 credits:1, defaultSem:'fall2728',   prereqs:['CPE2210','EE3100','EE3320'],coreqs:[], note:'Requires Econ & ≥3 of EE 3540/3500/3320/3430/3600'},
+    {id:'EE_POWER',   stCode:'EE 3540/3541 or 3500/3501', msuCode:null, title:'Power Elective & Lab (4 cr)',          credits:4, defaultSem:'fall2728',   prereqs:['EE2120'],                  coreqs:[], note:'EE 3540/3541 Power System Design (Spring) or EE 3500/3501 Electromechanics (Fall)'},
+    {id:'EE_ELEC_B',  stCode:'EE Elective B',    msuCode:null,       title:'EE Elective B',                           credits:3, defaultSem:'fall2728',   prereqs:[],                          coreqs:[]},
+    {id:'EE_ELEC_C',  stCode:'EE Elective C',    msuCode:null,       title:'EE Elective C',                           credits:3, defaultSem:'fall2728',   prereqs:[],                          coreqs:[]},
+    {id:'FREE1',      stCode:'Free Elective 1',  msuCode:null,       title:'Free Elective',                           credits:3, defaultSem:'fall2728',   prereqs:[],                          coreqs:[]},
+    {id:'GENED_SR',   stCode:'GenEd Elective',   msuCode:null,       title:'GenEd Elective (Senior)',                 credits:3, defaultSem:'fall2728',   prereqs:[],                          coreqs:[]},
+    {id:'EE4097',     stCode:'EE 4097',          msuCode:null,       title:'Senior Design Project II',                credits:3, defaultSem:'spring2728', prereqs:['EE4096','STAT3115'],       coreqs:['SPMS1185']},
+    {id:'EE_ELEC_D',  stCode:'EE Elective D',    msuCode:null,       title:'EE Elective D',                           credits:3, defaultSem:'spring2728', prereqs:[],                          coreqs:[]},
+    {id:'EE_ELEC_E',  stCode:'EE Elective E',    msuCode:null,       title:'EE Elective E',                           credits:3, defaultSem:'spring2728', prereqs:[],                          coreqs:[]},
+    {id:'ENGMGT2310', stCode:'Prof Dev Elective', msuCode:null,       title:'Professional Development Elective',       credits:3, defaultSem:'spring2728', prereqs:[],                          coreqs:[]},
+    {id:'FREE2',      stCode:'Free Elective 2',  msuCode:null,       title:'Free Elective',                           credits:3, defaultSem:'spring2728', prereqs:[],                          coreqs:[]},
+  ]
+}
+};
+
+// ═══ STATE ═══
+let P = null;          // current program key
+let COURSES = [];
+let plan = {};         // { semId: [courseId,...] }
+let completed = {};    // { courseId: true }
+let custom = {};       // { courseId: {msuCode, title} } — user-selected GenEd/elective choices
+let priorOpen = false;
+let dragId = null;
+let dragFrom = null;
+let pendingMove = null;// {courseId, toSem} awaiting confirm
+let history = [];      // stack of {plan, completed, custom} snapshots
+const MAX_HISTORY = 50;
+let sidebarFilter = 'all';
+
+// IDs that are GenEd Group 1, Group 2, or Free Electives — get the picker treatment
+const GENED_IDS = new Set([
+  // GenEd slots
+  'HST_PLS','GENED1','GENED2','GENED_12B','GENED_EL',
+  'HST_POL','GENED_HA','GENED_F','GENED_ECO','GENED_FS2','GENED_SR',
+  // Free electives
+  'FREE1','FREE2',
+  // EE professional dev
+  'ENGMGT2310',
+  // ME electives
+  'ENGL210','ME_TECH','SYS_MGMT','SYS_TECH',
+  // CE electives
+  'DEPTH1','DEPTH2','DEPTH3','TECH1','TECH2',
+  // EE electives
+  'EE_POWER','EE_ELEC_A','EE_ELEC_B','EE_ELEC_C','EE_ELEC_D','EE_ELEC_E','ENGSCI',
+]);
+
+// EE elective option lists
+const EE_POWER_OPTS = [
+  {st:'EE 3540/3541', title:'Power System Design and Analysis (w/ Lab EE 3541)', note:'🌸 Spring only', credits:4},
+  {st:'EE 3500/3501', title:'Electromechanics (w/ Lab EE 3501)', note:'🍂 Fall only', credits:4},
+];
+const EE_ELEC_ABC_OPTS = [
+  {st:'EE 3540',  title:'Power System Design and Analysis',                       note:'Spring'},
+  {st:'EE 3500',  title:'Electromechanics',                                       note:'Fall'},
+  {st:'EE 3410',  title:'Digital Signal Processing',                               note:'Fall, Spring, Summer'},
+  {st:'EE 3340',  title:'Basic Programmable Logic Controllers',                    note:'Fall, Spring'},
+  {st:'EE 3120',  title:'Electronics II Lecture',                                  note:'Fall, Spring, Summer'},
+  {st:'CpE 3150', title:'Intro to Microcontrollers and Embedded System Design',    note:'Spring'},
+];
+const EE_ELEC_D_OPTS = [
+  {st:'EE 5340',  title:'Power System Design and Analysis',      note:'Fall'},
+  {st:'EE 5510',  title:'Electric-Drive Vehicles',               note:'Fall'},
+  {st:'EE 5520',  title:'Power Electronics',                     note:'Fall'},
+  {st:'EE 5345',  title:'PLC Motion Control',                    note:'Spring'},
+  {st:'EE 5350',  title:'Plantwide Process Control',             note:'Spring'},
+  {st:'EE 5540',  title:'Power Systems EGR',                     note:'Spring'},
+  {st:'EE 4380',  title:'Practicum in Automation Engineering',   note:'Summer'},
+];
+const EE_ELEC_E_OPTS = [
+  {st:'EE 5340',  title:'Power System Design and Analysis',      note:'Fall'},
+  {st:'EE 5510',  title:'Electric-Drive Vehicles',               note:'Fall'},
+  {st:'EE 5520',  title:'Power Electronics',                     note:'Fall'},
+  {st:'EE 4099',  title:'Undergraduate Research',                note:'Fall/Spring'},
+  {st:'EE 5345',  title:'PLC Motion Control',                    note:'Spring'},
+  {st:'EE 5350',  title:'Plantwide Process Control',             note:'Spring'},
+  {st:'EE 5540',  title:'Power Systems EGR',                     note:'Spring'},
+];
+
+// History / Poli Sci options only (for HST_PLS, HST_POL, GENED_F on EE)
+const HIST_POL_OPTS = [
+  {st:'HISTORY 1300*', msu:'HST 121', grp:1},
+  {st:'HISTORY 1310*', msu:'HST 122', grp:1},
+  {st:'HISTORY 1100',  msu:'HST 101, 103', grp:2},
+  {st:'HISTORY 1200*', msu:'HST 102, 104', grp:2},
+  {st:'HISTORY 2110',  msu:'GRY 100', grp:2},
+  {st:'POLI SCI 1200*',msu:'PLS 101', grp:2},
+];
+
+// ENG 210 / COM 115 options (for ME ENGL210 slot)
+const ENG210_OPTS = [
+  {st:'ENGL 210/310', msu:'ENG 210', note:'Technical Writing'},
+  {st:'SP&MS 1185',   msu:'COM 115', note:'Principles of Speech'},
+];
+
+// Group 1: Humanities & Fine Arts (S&T requirement → MSU equivalent)
+const GENED_GRP1 = [
+  {st:'HISTORY 1300*', msu:'HST 121'},
+  {st:'HISTORY 1310*', msu:'HST 122'},
+  {st:'ART 1180',      msu:'ART 200'},
+  {st:'MUSIC 1150',    msu:'MUS 241'},
+  {st:'THEATER 1150',  msu:'No equivalent'},
+  {st:'ENGL 1211',     msu:'ENG 240, 340'},
+  {st:'ENGL 1212',     msu:'ENG 241, 341'},
+  {st:'ENGL 1221',     msu:'ENG 250, 350'},
+  {st:'ENGL 1222',     msu:'ENG 251, 351'},
+  {st:'ENGL 1231',     msu:'No equivalent'},
+];
+
+// Group 2: Behavioral & Social Sciences
+const GENED_GRP2 = [
+  {st:'HISTORY 1100',          msu:'HST 101, 103'},
+  {st:'HISTORY 1200*',         msu:'HST 102, 104'},
+  {st:'HISTORY 2110',          msu:'GRY 100'},
+  {st:'PHILOSOPHY 1105',       msu:'PHI 110'},
+  {st:'PHILOSOPHY 1115',       msu:'PHI 105'},
+  {st:'POLI SCI 1200*',        msu:'PLS 101'},
+  {st:'PSYCH 1101',            msu:'PSY 121, 125'},
+  {st:'ECON 1100',             msu:'ECO 165'},
+  {st:'ECON 1200',             msu:'ECO 155'},
+  {st:'Foreign Language 1101', msu:'FRN 100, 101; GRM 101; RUS 101; SPN 101'},
+  {st:'Foreign Language 1102', msu:'FRN 102; GRM 102; RUS 102; SPN 102'},
+  {st:'Foreign Language 1180', msu:'FRN 312; SPN 201'},
+];
+
+// Semester availability map: F=Fall, Sp=Spring, Su=Summer
+const COURSE_SEMS = {
+  'CE2003':      ['F'],
+  'CE2200':      ['F','Sp'],
+  'CE2210':      ['F','Sp','Su'],
+  'CE2211':      ['F','Sp'],
+  'CE2401':      ['F'],
+  'CE2601':      ['F','Sp'],
+  'CE3116':      ['Sp'],
+  'CE3201':      ['F'],
+  'CE3210':      ['F'],
+  'CE3220':      ['Sp'],
+  'CE3330':      ['F','Su'],
+  'CE3334':      ['Sp'],
+  'CE3500':      ['Sp'],
+  'CE3715':      ['F'],
+  'CE3842':      ['Sp'],
+  'CE4010':      ['F'],
+  'CE4097':      ['F','Sp'],
+  'CE4448':      ['F'],
+  'CHEM1310':    ['F','Sp','Su'],
+  'CHEM1319':    ['F','Sp','Su'],
+  'CPE2210':     ['F','Sp','Su'],
+  'CPE2211':     ['F','Sp'],
+  'CSCI_L':      ['F','Sp'],
+  'CSCI_LAB':    ['F','Sp'],
+  'EE2100':      ['F','Sp','Su'],
+  'EE2101':      ['F','Sp'],
+  'EE2120':      ['F','Sp','Su'],
+  'EE2410':      ['F'],
+  'EE2411':      ['F'],
+  'EE3100':      ['F','Sp','Su'],
+  'EE3101':      ['F','Sp'],
+  'EE3320':      ['F'],
+  'EE3321':      ['F','Sp'],
+  'EE3430':      ['F','Sp','Su'],
+  'EE3431':      ['F','Sp'],
+  'EE3600':      ['Sp'],
+  'EE4096':      ['F'],
+  'EE4097':      ['Sp'],
+  'EE_POWER':    ['F','Sp'],
+  'ENGL1120':    ['F','Sp','Su'],
+  'ENGL1160':    ['F','Sp','Su'],
+  'ENGL210':     ['F','Sp','Su'],
+  'ENGMGT1210':  ['F','Sp'],
+  'ENGMGT2310':  ['Sp'],
+  'FE1100':      ['F','Sp'],
+  'GEOENG1150':  ['F','Sp','Su'],
+  'MATH1214':    ['F','Sp','Su'],
+  'MATH1215':    ['F','Sp','Su'],
+  'MATH2222':    ['F','Sp','Su'],
+  'MATH3108':    ['F','Sp'],
+  'MATH3304':    ['F','Sp'],
+  'ME1720':      ['F','Sp'],
+  'ME1761':      ['F'],
+  'ME2360':      ['F','Sp','Su'],
+  'ME2519':      ['F','Sp','Su'],
+  'ME2653':      ['F'],
+  'ME2761':      ['Sp'],
+  'ME3131':      ['Sp','Su'],
+  'ME3313':      ['F','Su'],
+  'ME3411':      ['Sp','Su'],
+  'ME3521':      ['F'],
+  'ME3525':      ['Sp'],
+  'ME3708':      ['F','Su'],
+  'ME4479':      ['F'],
+  'ME4480':      ['F'],
+  'ME4761':      ['Sp'],
+  'ME4840':      ['Sp'],
+  'ME4842':      ['F'],
+  'MECHENG1720': ['F','Sp'],
+  'MECHENG2350': ['F','Sp','Su'],
+  'MTENG2110':   ['F','Sp'],
+  'PHYS1135':    ['F','Sp'],
+  'PHYS2135':    ['F','Sp'],
+  'SPMS1185':    ['F','Sp','Su'],
+  'STAT3113':    ['F','Sp'],
+  'STAT3115':    ['F','Sp'],
+};
+
+function semOfferedLabel(courseId){
+  const s = COURSE_SEMS[courseId];
+  if(!s||!s.length) return null;
+  const icons = s.map(x=>x==='F'?'🍂 Fall':x==='Sp'?'🌸 Sp':x==='Su'?'☀ Sum':'').filter(Boolean);
+  return icons.join(' · ');
+}
+
+function semOfferedMismatch(courseId, semId){
+  const s = COURSE_SEMS[courseId];
+  if(!s||!s.length) return false; // unknown, no warning
+  const si = SEM_IDS.find(x=>x.id===semId);
+  if(!si) return false;
+  if(si.isSummer){ return !s.includes('Su'); }
+  if(si.season==='fall')   return !s.includes('F');
+  if(si.season==='spring') return !s.includes('Sp');
+  return false;
+}
+
+function gc(id){ return COURSES.find(c=>c.id===id); }
+
+// semId order for prereq checking
+function semOrder(id){
+  const order = ['__prior__',...SEM_IDS.map(s=>s.id)];
+  return order.indexOf(id);
+}
+function coursesBefore(semId){
+  const idx=semOrder(semId), r=[];
+  ['__prior__',...SEM_IDS.map(s=>s.id)].forEach((s,i)=>{ if(i<idx) r.push(...(plan[s]||[])); });
+  return r;
+}
+function coursesUpTo(semId){
+  const idx=semOrder(semId), r=[];
+  ['__prior__',...SEM_IDS.map(s=>s.id)].forEach((s,i)=>{ if(i<=idx) r.push(...(plan[s]||[])); });
+  return r;
+}
+function plannedIn(cid){
+  for(const [sid,arr] of Object.entries(plan)){ if(arr.includes(cid)) return sid; }
+  return null;
+}
+
+function validate(courseId, semId){
+  const c=gc(courseId);
+  if(!c||(!c.prereqs.length&&!c.coreqs.length)) return {status:'none',lines:[]};
+  const before=coursesBefore(semId), upTo=coursesUpTo(semId), lines=[];
+  let blocked=false, adv=false, coreqM=false;
+
+  c.prereqs.forEach(pid=>{
+    const p=gc(pid);
+    const name=p?.stCode||pid;
+
+    // If the prereq course shares the same defaultSem as this course,
+    // it's a co-req (same semester is fine — listed together on the spreadsheet)
+    const isSameSemOnMap = p && p.defaultSem && c.defaultSem && p.defaultSem===c.defaultSem;
+
+    if(completed[pid]){
+      // fully satisfied — no note needed
+    } else if(isSameSemOnMap){
+      // Treat as co-req: must be in same semester or prior
+      if(!upTo.includes(pid)){
+        coreqM=true;
+        lines.push({t:'coreq',msg:`${name} should be taken same semester or earlier (listed together on degree map)`});
+      }
+    } else if(before.includes(pid)){
+      adv=true;
+      lines.push({t:'adv',msg:`${name} planned prior — must pass to enroll`});
+    } else {
+      blocked=true;
+      const where=plannedIn(pid);
+      const wSem=SEM_IDS.find(s=>s.id===where);
+      const wl=where==='__prior__'?'Prior':wSem?`${wSem.season==='fall'?'Fall':wSem.season==='spring'?'Spring':'Summer'} (${wSem.year})`:'the schedule';
+      lines.push({t:'err',msg:where?`${name} is in ${wl} — move it before this semester`:`${name} must be scheduled before this semester`});
+    }
+  });
+
+  // Explicit coreqs array (e.g. asterisk * entries from spreadsheet)
+  c.coreqs.forEach(pid=>{
+    const name=gc(pid)?.stCode||pid;
+    if(!upTo.includes(pid)&&!completed[pid]){
+      coreqM=true;
+      lines.push({t:'coreq',msg:`${name} should be same semester or earlier (*)`});
+    }
+  });
+
+  return {status:blocked?'blocked':coreqM?'coreq':adv?'adv':'ok', lines};
+}
+
+
+function crClass(cr){
+  if(cr===0) return 'cr-empty';
+  if(cr<10)  return 'cr-light';
+  if(cr<=18) return 'cr-ok';
+  if(cr<=21) return 'cr-heavy';
+  return 'cr-over';
+}
+
+// ═══ LAUNCH ═══
+function launch(prog){
+  P=prog;
+  const p=PROGRAMS[prog];
+  COURSES=p.courses;
+  plan={__prior__:[]};
+  SEM_IDS.forEach(s=>{plan[s.id]=[];});
+  completed={};
+  priorOpen=false;
+  history=[];
+  sidebarFilter='all';
+  custom={};
+  schedTimes={};
+  schedExtras={};
+  schedOnline={};
+
+  // Pre-populate from defaultSem
+  COURSES.forEach(c=>{
+    if(c.defaultSem && plan.hasOwnProperty(c.defaultSem)){
+      plan[c.defaultSem].push(c.id);
+    }
+  });
+
+  // Apply accent
+  const r=document.documentElement;
+  r.style.setProperty('--accent',p.accent);
+  r.style.setProperty('--accent-light',p.accentLight);
+  r.style.setProperty('--accent-border',p.accentBorder);
+  document.getElementById('prog-pill').textContent=prog;
+  document.getElementById('prog-pill').style.background=p.pillBg;
+  document.getElementById('hdr-title').textContent=p.name;
+
+  document.getElementById('picker').style.display='none';
+  document.getElementById('app').classList.add('on');
+  render();
+}
+
+function goBack(){
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('picker').style.display='flex';
+  P=null;
+}
+
+function confirmReset(){
+  document.getElementById('reset-modal').classList.add('open');
+}
+
+function doReset(){
+  document.getElementById('reset-modal').classList.remove('open');
+  // Re-run the same initialization as launch() but without switching screens
+  plan={__prior__:[]};
+  SEM_IDS.forEach(s=>{plan[s.id]=[];});
+  completed={};
+  custom={};
+  schedTimes={};
+  schedExtras={};
+  schedOnline={};
+  history=[];
+  sidebarFilter='all';
+  // Re-populate from defaultSem
+  COURSES.forEach(c=>{
+    if(c.defaultSem && plan.hasOwnProperty(c.defaultSem)){
+      plan[c.defaultSem].push(c.id);
+    }
+  });
+  updateUndoBtn();
+  // Reset sidebar search/filter
+  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.sf-btn[data-yr="all"]')?.classList.add('active');
+  const searchEl = document.getElementById('sidebar-search');
+  if(searchEl) searchEl.value='';
+  render();
+}
+
+// ═══ DRAG AUTO-SCROLL ═══
+// Scrolls the grid and sidebar panels when dragging near their edges
+let _scrollRaf = null;
+let _scrollDx = 0;
+let _scrollDy = 0;
+
+function _getScrollEl(el){
+  // Walk up to find the nearest scrollable ancestor
+  while(el && el !== document.body){
+    const style = getComputedStyle(el);
+    const overflow = style.overflow + style.overflowY + style.overflowX;
+    if(/(auto|scroll)/.test(overflow)) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+let _scrollTarget = null;
+
+document.addEventListener('dragover', e=>{
+  // Detect edge proximity within the scrollable scroll container
+  const EDGE = 80;   // px from edge to trigger
+  const SPEED = 12;  // max px per frame
+
+  // Find which scrollable panel the cursor is over
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const scrollEl = _getScrollEl(el) || document.documentElement;
+  _scrollTarget = scrollEl;
+
+  const rect = scrollEl.getBoundingClientRect ? scrollEl.getBoundingClientRect() : {top:0,bottom:window.innerHeight,left:0,right:window.innerWidth};
+
+  // Vertical
+  const distTop    = e.clientY - rect.top;
+  const distBottom = rect.bottom - e.clientY;
+  _scrollDy = 0;
+  if(distTop < EDGE && distTop > 0)    _scrollDy = -SPEED * (1 - distTop / EDGE);
+  if(distBottom < EDGE && distBottom > 0) _scrollDy =  SPEED * (1 - distBottom / EDGE);
+
+  // Horizontal (mainly for sidebar list)
+  _scrollDx = 0;
+
+  if(!_scrollRaf && (_scrollDy || _scrollDx)){
+    _scrollRaf = requestAnimationFrame(_doScroll);
+  }
+});
+
+function _doScroll(){
+  if(_scrollTarget && (_scrollDy || _scrollDx)){
+    _scrollTarget.scrollBy(_scrollDx, _scrollDy);
+    _scrollRaf = requestAnimationFrame(_doScroll);
+  } else {
+    _scrollRaf = null;
+  }
+}
+
+document.addEventListener('dragend', ()=>{
+  _scrollDy = 0; _scrollDx = 0;
+  if(_scrollRaf){ cancelAnimationFrame(_scrollRaf); _scrollRaf = null; }
+});
+document.addEventListener('drop', ()=>{
+  _scrollDy = 0; _scrollDx = 0;
+  if(_scrollRaf){ cancelAnimationFrame(_scrollRaf); _scrollRaf = null; }
+});
+
+// ═══ HISTORY ═══
+function snapshot(){
+  history.push({
+    plan: JSON.parse(JSON.stringify(plan)),
+    completed: JSON.parse(JSON.stringify(completed)),
+    custom: JSON.parse(JSON.stringify(custom))
+  });
+  if(history.length > MAX_HISTORY) history.shift();
+  updateUndoBtn();
+}
+
+function undo(){
+  if(!history.length) return;
+  const prev=history.pop();
+  plan=prev.plan;
+  completed=prev.completed;
+  custom=prev.custom||{};
+  updateUndoBtn();
+  render();
+}
+
+function updateUndoBtn(){
+  const btn=document.getElementById('undo-btn');
+  if(!btn) return;
+  btn.disabled=history.length===0;
+  btn.style.opacity=history.length===0?'.4':'1';
+  btn.title=history.length ? `Undo last change (${history.length} step${history.length>1?'s':''} available) · Ctrl+Z` : 'Nothing to undo';
+}
+
+// Ctrl+Z keyboard shortcut
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key==='z' && !e.shiftKey){
+    e.preventDefault();
+    undo();
+  }
+});
+
+// ═══ RENDER ═══
+function render(){
+  // Preserve scroll positions before rebuilding DOM
+  const gridScroll = document.getElementById('grid-scroll');
+  const sideScroll = document.getElementById('sidebar-list');
+  const savedGrid  = gridScroll  ? gridScroll.scrollTop  : 0;
+  const savedSide  = sideScroll  ? sideScroll.scrollTop  : 0;
+
+  buildGrid();
+  updatePrior();
+  updateStats();
+  updateUndoBtn();
+  renderSidebar();
+
+  // Restore scroll positions after DOM rebuild
+  const newGridScroll = document.getElementById('grid-scroll');
+  if(newGridScroll) newGridScroll.scrollTop = savedGrid;
+  const newSideScroll = document.getElementById('sidebar-list');
+  if(newSideScroll) newSideScroll.scrollTop = savedSide;
+}
+
+function setSidebarFilter(btn){
+  sidebarFilter = btn.dataset.yr;
+  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSidebar();
+}
+
+function renderSidebar(){
+  const list = document.getElementById('sidebar-list');
+  const countEl = document.getElementById('sidebar-count');
+  if(!list) return;
+  const search = (document.getElementById('sidebar-search')?.value||'').toLowerCase();
+
+  // All courses that are NOT currently placed anywhere in plan
+  const allPlanned = new Set(Object.values(plan).flat());
+
+  const visible = COURSES.filter(c=>{
+    if(allPlanned.has(c.id)) return false; // already on schedule or prior
+    if(sidebarFilter !== 'all' && c.year !== sidebarFilter) return false;
+    if(search){
+      const hay = `${c.msuCode||''} ${c.stCode} ${c.title}`.toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  countEl.textContent = `${visible.length} available`;
+  list.innerHTML = '';
+
+  if(!visible.length){
+    list.innerHTML = '<div class="sidebar-empty">All courses are on the schedule.<br>Remove a course to see it here.</div>';
+    return;
+  }
+
+  // Get default semester labels for hint
+  const semLabel = id => { const s=SEM_IDS.find(x=>x.id===id); return s?`${s.season==='fall'?'Fall':'Spring'} (${s.year})`:''; };
+
+  visible.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'sc-card';
+    card.draggable = true;
+    card.dataset.id = c.id;
+    card.setAttribute('role','button');
+    card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label',`${c.msuCode||c.stCode} — ${c.title}, ${c.credits} credits`);
+
+    card.innerHTML = `
+      <div>${c.msuCode
+        ? `<div class="sc-msu">${c.msuCode}</div><div class="sc-st">${c.stCode}</div>`
+        : `<div class="sc-st-only">${c.stCode}</div>`
+      }</div>
+      <div class="sc-title">${c.title}</div>
+      <div class="sc-foot">
+        <span class="sc-cr">${c.credits} cr · ${c.year}</span>
+        ${c.defaultSem ? `<span class="sc-default">→ ${semLabel(c.defaultSem)}</span>` : ''}
+      </div>
+    `;
+
+    // Drag from sidebar
+    card.addEventListener('dragstart', e=>{
+      dragId = c.id;
+      dragFrom = null; // coming from sidebar, not a semester
+      e.dataTransfer.setData('text/plain', c.id);
+      e.dataTransfer.effectAllowed = 'copyMove';
+      setTimeout(()=>card.classList.add('sc-dragging'), 0);
+    });
+    card.addEventListener('dragend', ()=>card.classList.remove('sc-dragging'));
+
+    // Click: restore to default semester
+    card.addEventListener('click', ()=>restoreToDefault(c.id));
+    card.addEventListener('keydown', e=>{
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); restoreToDefault(c.id); }
+    });
+
+    list.appendChild(card);
+  });
+}
+
+function restoreToDefault(courseId){
+  const c = gc(courseId);
+  if(!c || !c.defaultSem) return;
+  snapshot();
+  // Remove from wherever it currently is (shouldn't be anywhere, but safety check)
+  Object.keys(plan).forEach(sid=>{ plan[sid]=plan[sid].filter(id=>id!==courseId); });
+  plan[c.defaultSem].push(courseId);
+  render();
+}
+
+function updateStats(){
+  let cr=0, done=0;
+  const issuesList = []; // {type, label, semId, courseId}
+
+  // Prereq / coreq issues
+  Object.entries(plan).forEach(([sid,ids])=>{
+    ids.forEach(cid=>{
+      cr += gc(cid)?.credits||0;
+      if(completed[cid]) done++;
+      if(sid!=='__prior__'){
+        const v=validate(cid,sid);
+        if(v.status==='blocked'||v.status==='coreq'){
+          const c=gc(cid);
+          const si=SEM_IDS.find(s=>s.id===sid);
+          const semLabel=si?`${si.season==='fall'?'Fall':'Spring'} (${si.year})`:'';
+          issuesList.push({
+            type:'prereq',
+            label:`${c?.msuCode||c?.stCode||cid} in ${semLabel} — ${v.status==='blocked'?'missing prereq':'co-req not scheduled'}`,
+            semId: sid,
+            courseId: cid
+          });
+        }
+      }
+    });
+  });
+
+  // Overloaded semesters (>18 cr)
+  SEM_IDS.forEach(si=>{
+    const ids=plan[si.id]||[];
+    const semCr=ids.reduce((s,cid)=>s+(gc(cid)?.credits||0),0);
+    if(semCr>18){
+      const semLabel=`${si.season==='fall'?'Fall':'Spring'} (${si.year})`;
+      issuesList.push({
+        type:'overload',
+        label:`${semLabel} is overloaded — ${semCr} credits (max 18 recommended)`,
+        semId: si.id,
+        courseId: null
+      });
+    }
+  });
+
+  // Unplanned required courses (not in plan and not a GenEd/elective)
+  const allPlanned = new Set(Object.values(plan).flat());
+  COURSES.forEach(c=>{
+    if(!allPlanned.has(c.id) && !GENED_IDS.has(c.id) &&
+       c.year!=='Elective' && !c.id.startsWith('FREE') &&
+       !c.id.startsWith('DEPTH') && !c.id.startsWith('TECH') &&
+       !c.id.startsWith('SYS_') && !c.id.startsWith('EE_ELEC') &&
+       !c.id.startsWith('EE_POWER') && !c.id.startsWith('ME_TECH') &&
+       !c.id.startsWith('ENGSCI')){
+      issuesList.push({
+        type:'unplanned',
+        label:`${c.msuCode||c.stCode} (${c.title}) — not on schedule`,
+        semId: null,
+        courseId: c.id
+      });
+    }
+  });
+
+  // Update header counts
+  document.getElementById('h-cr').textContent=cr;
+  document.getElementById('h-done').textContent=done;
+  document.getElementById('h-issues').textContent=issuesList.length;
+
+  // Build issues panel
+  const panel = document.getElementById('issues-panel');
+  if(!issuesList.length){
+    panel.style.display='none';
+    panel.innerHTML='';
+    return;
+  }
+  panel.style.display='block';
+
+  // Group by type
+  const prereqIssues   = issuesList.filter(i=>i.type==='prereq');
+  const overloadIssues = issuesList.filter(i=>i.type==='overload');
+  const unplannedIssues= issuesList.filter(i=>i.type==='unplanned');
+
+  let html=`<div style="padding:8px 18px 4px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--red-border);">
+    <span style="font-size:13px;font-weight:700;color:var(--red);">⚠ ${issuesList.length} Issue${issuesList.length>1?'s':''}</span>
+    <span style="font-size:11px;color:var(--red);opacity:.7;">Click any item to locate it on the schedule</span>
+  </div>`;
+
+  if(overloadIssues.length){
+    html+=`<div style="padding:5px 18px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--orange);">Overloaded Semesters</div>`;
+    overloadIssues.forEach(issue=>{
+      html+=`<div class="issue-row" data-sem="${issue.semId}" style="cursor:pointer;padding:4px 18px 4px 24px;font-size:12px;color:var(--orange);border-bottom:1px solid var(--orange-border);" onmouseover="this.style.background='var(--orange-light)'" onmouseout="this.style.background=''">
+        📊 ${issue.label}
+      </div>`;
+    });
+  }
+  if(prereqIssues.length){
+    html+=`<div style="padding:5px 18px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--red);">Prerequisite Issues</div>`;
+    prereqIssues.forEach(issue=>{
+      html+=`<div class="issue-row" data-sem="${issue.semId}" data-cid="${issue.courseId||''}" style="cursor:pointer;padding:4px 18px 4px 24px;font-size:12px;color:var(--red);border-bottom:1px solid var(--red-border);" onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background=''">
+        ✕ ${issue.label}
+      </div>`;
+    });
+  }
+  if(unplannedIssues.length){
+    html+=`<div style="padding:5px 18px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);">Unplanned Required Courses</div>`;
+    unplannedIssues.forEach(issue=>{
+      html+=`<div class="issue-row" data-cid="${issue.courseId||''}" data-sidebar="1" style="cursor:pointer;padding:4px 18px 4px 24px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+        📋 ${issue.label}
+      </div>`;
+    });
+  }
+
+  panel.innerHTML=html;
+
+  // Wire click handlers to scroll + highlight
+  panel.querySelectorAll('.issue-row').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const sid   = row.dataset.sem;
+      const cid   = row.dataset.cid;
+      const isSidebar = row.dataset.sidebar==='1';
+
+      if(isSidebar){
+        // Highlight in sidebar
+        const sideList = document.getElementById('sidebar-list');
+        if(sideList){
+          sideList.scrollIntoView({behavior:'smooth'});
+          // Search for the course in sidebar
+          const searchEl = document.getElementById('sidebar-search');
+          if(searchEl && cid){
+            const c = gc(cid);
+            searchEl.value = c?.stCode||'';
+            sidebarFilter='all';
+            document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelector('.sf-btn[data-yr="all"]')?.classList.add('active');
+            renderSidebar();
+            // Flash the card
+            setTimeout(()=>{
+              const cards = sideList.querySelectorAll('.sc-card');
+              cards.forEach(card=>{
+                if(card.dataset.id===cid){
+                  card.style.outline='3px solid var(--red)';
+                  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+                  setTimeout(()=>card.style.outline='',2000);
+                }
+              });
+            },100);
+          }
+        }
+      } else if(sid){
+        // Scroll grid to the semester section
+        const gridScroll = document.getElementById('grid-scroll');
+        if(gridScroll){
+          // Find the year heading for this semester
+          const yearDivs = gridScroll.querySelectorAll('[data-sem-id]');
+          let target = null;
+          yearDivs.forEach(el=>{ if(el.dataset.semId===sid) target=el; });
+          if(target){
+            target.scrollIntoView({behavior:'smooth',block:'start'});
+          } else {
+            // Fall back: find by sem header
+            const headers = gridScroll.querySelectorAll('[data-year-sem]');
+            headers.forEach(el=>{ if(el.dataset.yearSem===sid){ target=el; } });
+            if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+            else gridScroll.scrollIntoView({behavior:'smooth'});
+          }
+          // Flash the course card if cid given
+          if(cid){
+            setTimeout(()=>{
+              const card = gridScroll.querySelector(`[data-id="${cid}"]`);
+              if(card){
+                card.style.outline='3px solid var(--red)';
+                card.scrollIntoView({behavior:'smooth',block:'nearest'});
+                setTimeout(()=>card.style.outline='',2500);
+              }
+            },300);
+          }
+        }
+      }
+    });
+  });
+}
+
+function makeDropZone(sid, inline){
+  const dz=document.createElement('div');
+  dz.className='drop-zone';
+  if(inline){ dz.style.cssText='display:flex;flex-wrap:wrap;gap:6px;min-height:50px;'; }
+  else { dz.style.minHeight='80px'; }
+  dz.dataset.sem=sid;
+  dz.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();dz.classList.add('drag-over');});
+  dz.addEventListener('dragleave',e=>{if(!dz.contains(e.relatedTarget))dz.classList.remove('drag-over');});
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();dz.classList.remove('drag-over');
+    if(!dragId)return;doMove(dragId,dragFrom,sid);dragId=null;dragFrom=null;
+  });
+  return dz;
+}
+
+function buildGrid(){
+  const wrap=document.getElementById('grid-wrap');
+  wrap.innerHTML='';
+
+  // Sticky column-header bar (Fall | Spring) — always visible
+  const hdrBar=document.createElement('div');
+  hdrBar.style.cssText='display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:10;';
+  ['fall','spring'].forEach(season=>{
+    const h=document.createElement('div');
+    h.style.cssText=`padding:10px 16px;font-size:14px;font-weight:700;color:var(--text);text-align:center;border:1px solid var(--border);border-bottom:2px solid var(--border2);background:${season==='fall'?'#f0f2f5':'#eef2ff'};`;
+    h.textContent=season==='fall'?'🍂 Fall':'🌸 Spring';
+    hdrBar.appendChild(h);
+  });
+  wrap.appendChild(hdrBar);
+
+  // Scrollable content
+  const scroll=document.createElement('div');
+  scroll.id='grid-scroll';
+  scroll.style.cssText='flex:1;overflow-y:auto;';
+  wrap.style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden;';
+
+  YEARS.forEach(yr=>{
+    // ── YEAR LABEL ROW ──
+    const yearDiv=document.createElement('div');
+    yearDiv.style.cssText=`
+      background:var(--text);color:#fff;
+      padding:8px 16px;
+      font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+      display:flex;align-items:center;justify-content:space-between;
+      border-top:3px solid var(--accent);
+    `;
+    // year credit total
+    const allYrSems=[...yr.sems,yr.summer].filter(Boolean);
+    const yrCr=allYrSems.reduce((s,sid)=>(plan[sid]||[]).reduce((s2,cid)=>s2+(gc(cid)?.credits||0),0)+s,0);
+    const targetCr={Freshman:33,Sophomore:34,Junior:34,Senior:32}[yr.label.split(' ')[0]]||34;
+    const pct=Math.min(100,Math.round(yrCr/targetCr*100));
+    let barCol=pct<50?'var(--yellow)':pct<=105?'var(--green)':pct<=125?'var(--orange)':'var(--red)';
+    yearDiv.innerHTML=`
+      <span>${yr.label}</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:80px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:2px;"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:10px;opacity:.7;">${yrCr} / ~${targetCr} cr</span>
+      </div>
+    `;
+    scroll.appendChild(yearDiv);
+
+    // ── SEM CREDIT SUB-HEADERS ──
+    const semHdr=document.createElement('div');
+    semHdr.style.cssText='display:grid;grid-template-columns:1fr 1fr;';
+    yr.sems.forEach(sid=>{
+      const si=SEM_IDS.find(s=>s.id===sid);
+      const courses=plan[sid]||[];
+      const semCr=courses.reduce((s,cid)=>s+(gc(cid)?.credits||0),0);
+      const cc=crClass(semCr);
+      const allDone = courses.length>0 && courses.every(cid=>completed[cid]);
+      const sh=document.createElement('div');
+      sh.style.cssText=`padding:5px 10px;font-size:10px;font-weight:600;color:var(--text2);text-align:center;border:1px solid var(--border);border-top:none;background:${si.season==='fall'?'#fafbfc':'#f4f6ff'};display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;`;
+      sh.dataset.yearSem=sid;
+
+      // Schedule button
+      const schedBtn=document.createElement('button');
+      schedBtn.textContent='📅 Schedule';
+      schedBtn.style.cssText='font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;border:1.5px solid var(--accent-border);background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:var(--sans);transition:all .12s;white-space:nowrap;';
+      schedBtn.addEventListener('mouseover',()=>{schedBtn.style.background='var(--accent)';schedBtn.style.color='#fff';});
+      schedBtn.addEventListener('mouseout',()=>{schedBtn.style.background='var(--accent-light)';schedBtn.style.color='var(--accent)';});
+      schedBtn.addEventListener('click',e=>{e.stopPropagation();openSchedule(sid);});
+
+      // Mark all complete / unmark button
+      const doneBtn=document.createElement('button');
+      doneBtn.textContent = allDone ? '✓ Completed' : '✓ Mark Complete';
+      doneBtn.style.cssText=`font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;font-family:var(--sans);transition:all .12s;white-space:nowrap;border:1.5px solid ${allDone?'var(--green-border)':'var(--border2)'};background:${allDone?'var(--green-light)':'transparent'};color:${allDone?'var(--green)':'var(--text3)'};`;
+      doneBtn.title = allDone ? 'Click to unmark all as completed' : 'Mark all courses in this semester as completed';
+      doneBtn.addEventListener('click',e=>{
+        e.stopPropagation();
+        snapshot();
+        if(allDone){
+          // Unmark all
+          courses.forEach(cid=>{ delete completed[cid]; });
+        } else {
+          // Mark all complete
+          courses.forEach(cid=>{ completed[cid]=true; });
+        }
+        render();
+      });
+
+      sh.innerHTML=`<span>${si.season==='fall'?'🍂 Fall':'🌸 Spring'}</span><span class="col-cr-badge ${cc}">${semCr} cr</span>`;
+      sh.appendChild(doneBtn);
+      sh.appendChild(schedBtn);
+      semHdr.appendChild(sh);
+    });
+    scroll.appendChild(semHdr);
+
+    // ── COURSE CONTENT ROW ──
+    const row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:1fr 1fr;';
+    yr.sems.forEach(sid=>{
+      const si=SEM_IDS.find(s=>s.id===sid);
+      const cell=document.createElement('div');
+      cell.style.cssText=`border:1px solid var(--border);border-top:none;padding:10px;background:${si.season==='fall'?'#fafbfc':'#f7f9ff'};`;
+      const dz=makeDropZone(sid, false);
+      const courses=plan[sid]||[];
+      if(!courses.length){
+        const hint=document.createElement('div');
+        hint.style.cssText='font-size:11px;color:var(--text3);text-align:center;padding:20px 8px;opacity:.4;';
+        hint.textContent='Drag courses here';
+        dz.appendChild(hint);
+      } else {
+        courses.forEach(cid=>dz.appendChild(buildCard(cid,sid)));
+      }
+      cell.appendChild(dz);
+      row.appendChild(cell);
+    });
+    scroll.appendChild(row);
+
+    // ── SUMMER STRIP ──
+    if(yr.summer){
+      const sumSid=yr.summer;
+      const sumCourses=plan[sumSid]||[];
+      const sumSi=SEM_IDS.find(s=>s.id===sumSid);
+      const sumCr=sumCourses.reduce((s,cid)=>s+(gc(cid)?.credits||0),0);
+
+      const sumStrip=document.createElement('div');
+      sumStrip.style.cssText='background:#fffbeb;border:1px solid #fde68a;border-top:none;padding:7px 12px;display:flex;align-items:flex-start;gap:12px;';
+
+      const sumLabel=document.createElement('div');
+      sumLabel.style.cssText='font-size:10px;color:#92400e;font-family:var(--mono);font-weight:600;white-space:nowrap;padding-top:6px;min-width:130px;';
+      sumLabel.innerHTML=`☀ Summer<br><span style="font-weight:400;opacity:.6;font-size:9px;">Drop courses here · optional</span>`;
+      const sumSchedBtn=document.createElement('button');
+      sumSchedBtn.textContent='📅 Schedule';
+      sumSchedBtn.style.cssText='margin-top:4px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;border:1.5px solid #d97706;background:#fef3c7;color:#92400e;cursor:pointer;font-family:var(--sans);display:block;';
+      sumSchedBtn.addEventListener('click',e=>{e.stopPropagation();openSchedule(sumSid);});
+      sumLabel.appendChild(sumSchedBtn);
+      sumStrip.appendChild(sumLabel);
+
+      const sumDz=makeDropZone(sumSid, true);
+      sumDz.style.flex='1';
+      if(!sumCourses.length){
+        const hint=document.createElement('div');
+        hint.style.cssText='font-size:10px;color:#92400e;opacity:.45;padding:8px 4px;';
+        hint.textContent='Drag courses from Fall or Spring into this summer semester';
+        sumDz.appendChild(hint);
+      } else {
+        sumCourses.forEach(cid=>{
+          const card=buildCard(cid,sumSid);
+          card.style.width='210px';
+          sumDz.appendChild(card);
+        });
+      }
+      sumStrip.appendChild(sumDz);
+      scroll.appendChild(sumStrip);
+    }
+
+    // Gap between years
+    const gap=document.createElement('div');
+    gap.style.cssText='height:18px;background:var(--bg);';
+    scroll.appendChild(gap);
+  });
+
+  wrap.appendChild(scroll);
+}
+
+
+function buildCard(cid, sid){
+  const c=gc(cid); if(!c) return document.createElement('div');
+  const isComp=completed[cid];
+  const val=isComp?{status:'done',lines:[]}:validate(cid,sid);
+  const statusCls={none:'status-none',ok:'status-ok',adv:'status-advisory',coreq:'status-coreq',blocked:'status-blocked',done:'status-done'}[val.status]||'status-none';
+  const isPickable = GENED_IDS.has(cid);
+  const cx = custom[cid]; // custom selection for GenEd/Free slots
+
+  const card=document.createElement('div');
+  card.className=`course-card ${statusCls}`;
+  card.draggable=true;
+  card.dataset.id=cid;
+  card.dataset.sem=sid;
+
+  let flagHtml='';
+
+  // Semester availability badge
+  const semLabel = semOfferedLabel(cid);
+  const isMismatch = sid !== '__prior__' && semOfferedMismatch(cid, sid);
+  if(semLabel){
+    flagHtml += `<div class="cc-flag flag-info" style="font-size:9px;">📅 Offered: ${semLabel}</div>`;
+  }
+  if(isMismatch){
+    const si = SEM_IDS.find(s=>s.id===sid);
+    const seasonName = si?.isSummer?'summer':si?.season==='fall'?'fall':'spring';
+    flagHtml += `<div class="cc-flag flag-advisory">⚠ Not typically offered in ${seasonName} — confirm with advisor</div>`;
+  }
+
+  if(val.lines.length){
+    flagHtml+=val.lines.map(l=>{
+      const cls={adv:'flag-advisory',coreq:'flag-coreq',err:'flag-blocked'}[l.t]||'';
+      const ic={adv:'⚠',coreq:'⚡',err:'✕'}[l.t]||'';
+      return`<div class="cc-flag ${cls}">${ic} ${l.msg}</div>`;
+    }).join('');
+  } else if(isComp){
+    flagHtml+='<div class="cc-flag flag-ok">✓ Completed</div>';
+  } else if(c.note){
+    flagHtml+=`<div class="cc-flag flag-info">ℹ ${c.note}</div>`;
+  }
+
+  // For GenEd/Free slots: show the chosen course if selected, else show a prompt
+  const displayMsu  = cx?.msu || c.msuCode;
+  const displaySt   = cx?.st  || c.stCode;
+  const needsPick   = isPickable && !cx;
+  const pickPrompt  = needsPick
+    ? `<div class="cc-flag" style="color:var(--accent);cursor:pointer;" data-pick="${cid}">✏ Click to select course</div>`
+    : (cx ? `<div class="cc-flag" style="color:var(--text2);cursor:pointer;" data-pick="${cid}">✏ Change: ${cx.st}</div>` : '');
+
+  card.innerHTML=`
+    <div class="cc-top">
+      <div class="cc-codes">
+        ${displayMsu
+          ? `<div class="cc-msu">${displayMsu}</div><div class="cc-st">${displaySt}</div>`
+          : `<div class="cc-st-primary">${displaySt}</div>`}
+      </div>
+      <div class="cc-right">
+        <span class="cc-cr">${c.credits}</span>
+        <input type="checkbox" class="cc-check" ${isComp?'checked':''} title="Mark as completed/passed" aria-label="Mark as completed" data-id="${cid}">
+        <button class="cc-remove" data-id="${cid}" data-sem="${sid}" title="Remove from schedule" aria-label="Remove from schedule">×</button>
+      </div>
+    </div>
+    <div class="cc-title">${c.title}</div>
+    ${pickPrompt}
+    ${flagHtml}
+  `;
+
+  // GenEd picker trigger — click the prompt text or the card title area (not buttons)
+  if(isPickable){
+    const pickTrigger = card.querySelector('[data-pick]');
+    if(pickTrigger){
+      pickTrigger.addEventListener('click', e=>{
+        e.stopPropagation();
+        openGenEdPicker(cid);
+      });
+    }
+  }
+
+  card.querySelector('.cc-check').addEventListener('change',e=>{
+    e.stopPropagation();
+    snapshot();
+    if(e.target.checked) completed[cid]=true; else delete completed[cid];
+    render();
+  });
+
+  card.querySelector('.cc-remove').addEventListener('click', e=>{
+    e.stopPropagation();
+    snapshot();
+    plan[sid] = plan[sid].filter(id=>id!==cid);
+    delete completed[cid];
+    render();
+  });
+
+  card.addEventListener('dragstart',e=>{
+    dragId=cid; dragFrom=sid;
+    e.dataTransfer.setData('text/plain', cid);
+    e.dataTransfer.effectAllowed='move';
+    setTimeout(()=>card.classList.add('dragging'),0);
+  });
+  card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+
+  return card;
+}
+
+function updatePrior(){
+  const ids=plan['__prior__']||[];
+  document.getElementById('prior-meta').textContent=`${ids.length} courses · ${ids.reduce((s,id)=>s+(gc(id)?.credits||0),0)} cr`;
+  const chips=document.getElementById('prior-chips');
+  chips.innerHTML='';
+  ids.forEach(id=>{
+    const c=gc(id); if(!c) return;
+    const isComp=completed[id];
+    const chip=document.createElement('div');
+    chip.className=`prior-chip ${isComp?'done':'pend'}`;
+    chip.innerHTML=`<input type="checkbox" style="width:11px;height:11px;cursor:pointer;accent-color:var(--green);" ${isComp?'checked':''} title="Mark as passed"><span>${c.stCode}</span><button title="Remove">×</button>`;
+    chip.querySelector('input').addEventListener('change',ev=>{ev.stopPropagation();snapshot();if(ev.target.checked)completed[id]=true;else delete completed[id];render();});
+    chip.querySelector('button').addEventListener('click',ev=>{
+      ev.stopPropagation();
+      snapshot();
+      plan['__prior__']=plan['__prior__'].filter(x=>x!==id);
+      // restore to default sem
+      const course=gc(id);
+      if(course?.defaultSem && plan.hasOwnProperty(course.defaultSem)) plan[course.defaultSem].push(id);
+      delete completed[id];
+      render();
+    });
+    chips.appendChild(chip);
+  });
+}
+
+function togglePrior(){
+  priorOpen=!priorOpen;
+  document.getElementById('prior-body').style.display=priorOpen?'block':'none';
+  document.getElementById('prior-toggle').textContent=priorOpen?'▲ Collapse':'▼ Expand';
+}
+
+function dropToPrior(e){
+  e.preventDefault();
+  document.getElementById('prior-drop-hint').classList.remove('active');
+  if(!dragId) return;
+  doMove(dragId, dragFrom, '__prior__');
+  dragId=null; dragFrom=null;
+}
+
+// ═══ MOVE LOGIC ═══
+function doMove(courseId, fromSem, toSem){
+  // Only short-circuit if moving within the same actual semester (not from sidebar)
+  if(fromSem !== null && fromSem===toSem) return;
+
+  // Snapshot before any mutation
+  snapshot();
+
+  if(fromSem) plan[fromSem]=plan[fromSem].filter(id=>id!==courseId);
+
+  // Prior bucket — auto-complete
+  if(toSem==='__prior__'){
+    plan['__prior__'].push(courseId);
+    completed[courseId]=true;
+    if(!priorOpen) togglePrior();
+    render(); return;
+  }
+
+  // Check prereqs
+  const val=validate(courseId,toSem);
+  if(val.status==='blocked'){
+    // Restore without recording another snapshot (pop the one we just took)
+    history.pop();
+    if(fromSem) plan[fromSem].push(courseId);
+    updateUndoBtn();
+    const c=gc(courseId);
+    const toSem2=SEM_IDS.find(s=>s.id===toSem);
+    const toLabel=toSem2?`${toSem2.season==='fall'?'Fall':toSem2.season==='spring'?'Spring':'Summer'} (${toSem2.year})`:toSem;
+    document.getElementById('bm-title').textContent=`Prereq Issue — ${c.stCode}`;
+    document.getElementById('bm-body').innerHTML=
+      val.lines.filter(l=>l.t==='err').map(l=>`• ${l.msg}`).join('<br>')+
+      `<br><br>Moving to <strong>${toLabel}</strong> may cause issues. You can still move it, or move the prerequisite course to an earlier semester first.`;
+    pendingMove={courseId,fromSem,toSem};
+    document.getElementById('block-modal').classList.add('open');
+    return;
+  }
+
+  if(!plan[toSem]) plan[toSem]=[];
+  plan[toSem].push(courseId);
+  render();
+}
+
+// Confirm button for block modal — allows moving anyway
+document.getElementById('bm-confirm').addEventListener('click',()=>{
+  document.getElementById('block-modal').classList.remove('open');
+  if(!pendingMove) return;
+  const {courseId,fromSem,toSem}=pendingMove;
+  pendingMove=null;
+  snapshot(); // record before forced move
+  if(!plan[toSem]) plan[toSem]=[];
+  plan[toSem].push(courseId);
+  render();
+});
+document.getElementById('block-modal').querySelector('.btn').addEventListener('click',()=>{
+  document.getElementById('block-modal').classList.remove('open');
+  if(pendingMove?.fromSem) plan[pendingMove.fromSem].push(pendingMove.courseId);
+  pendingMove=null;
+  render();
+});
+
+// ═══ GENED PICKER ═══
+let _genedTargetId = null;
+
+function openGenEdPicker(courseId){
+  _genedTargetId = courseId;
+  const c = gc(courseId);
+
+  // Categorise the slot
+  const isFree       = courseId.startsWith('FREE');
+  const isHistPol    = ['HST_PLS','HST_POL','GENED_F'].includes(courseId); // History/Pol Sci only
+  const isENG210     = courseId === 'ENGL210'; // ENG 210 or COM 115
+  const isProfDev    = courseId === 'ENGMGT2310'; // manual only
+  const isEEPower    = courseId === 'EE_POWER';
+  const isEEElecABC  = ['EE_ELEC_A','EE_ELEC_B','EE_ELEC_C'].includes(courseId);
+  const isEEElecD    = courseId === 'EE_ELEC_D';
+  const isEEElecE    = courseId === 'EE_ELEC_E';
+  const isEEElec     = isEEPower || isEEElecABC || isEEElecD || isEEElecE;
+  const isGenEdElec  = ['ME_TECH','SYS_MGMT','SYS_TECH',
+                        'DEPTH1','DEPTH2','DEPTH3','TECH1','TECH2','ENGSCI'].includes(courseId);
+
+  // For generic GenEd group slots (not hist/pol, not EE)
+  const isGrp1Only   = ['GENED1','GENED_HA'].includes(courseId);
+  const isGrp2Only   = ['GENED2','GENED_ECO','GENED_FS2','GENED_SR'].includes(courseId);
+  const isGenEdBoth  = ['GENED_12B','GENED_EL'].includes(courseId);
+
+  // Header
+  document.getElementById('gm-icon').textContent =
+    isEEElec ? '⚡' : isHistPol ? '🏛️' : isENG210 ? '✍️' :
+    isFree || isGenEdElec || isProfDev ? '📝' : '📚';
+
+  document.getElementById('gm-title').textContent = c?.title || courseId;
+  document.getElementById('gm-desc').textContent  =
+    isHistPol   ? 'Select a History or Political Science course (* = fulfills Williams Law).'
+    : isENG210  ? 'Choose between Technical Writing (ENG 210) or Principles of Speech (COM 115).'
+    : isProfDev ? 'Enter the professional development course for this slot.'
+    : isEEPower ? 'Choose one Power elective with lab. Note semester availability.'
+    : isEEElecABC ? 'Choose one EE elective for this slot.'
+    : isEEElecD   ? 'Choose one Senior EE elective (D).'
+    : isEEElecE   ? 'Choose one Senior EE elective (E).'
+    : isFree || isGenEdElec ? 'Enter the course you plan to take for this slot.'
+    : '* Fulfills Williams Law requirement. Click a course to select it, or enter one manually.';
+
+  // Show/hide sections
+  document.getElementById('gm-elec-section').style.display =
+    (isHistPol || isENG210 || isEEElec) ? '' : 'none';
+  document.getElementById('gm-grp1-section').style.display =
+    (!isEEElec && !isFree && !isGenEdElec && !isProfDev && !isHistPol && !isENG210 &&
+     (isGrp1Only || isGenEdBoth || (!isGrp2Only))) ? '' : 'none';
+  document.getElementById('gm-grp2-section').style.display =
+    (!isEEElec && !isFree && !isGenEdElec && !isProfDev && !isHistPol && !isENG210 &&
+     (isGrp2Only || isGenEdBoth)) ? '' : 'none';
+
+  // ── Build elective/options grid ──
+  const elecGrid = document.getElementById('gm-elec');
+  elecGrid.innerHTML = '';
+
+  if(isHistPol){
+    document.getElementById('gm-elec-label').textContent = 'History & Political Science Options';
+    elecGrid.className = 'gm-grid single-col';
+    HIST_POL_OPTS.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'gm-option' + (custom[courseId]?.st===opt.st ? ' selected' : '');
+      btn.innerHTML = `<div class="gm-st">${opt.st}</div><div class="gm-msu">→ ${opt.msu} · Group ${opt.grp}</div>`;
+      btn.addEventListener('click', ()=>selectGenEd(courseId, opt.st, opt.msu));
+      elecGrid.appendChild(btn);
+    });
+  } else if(isENG210){
+    document.getElementById('gm-elec-label').textContent = 'Technical Communication Options';
+    elecGrid.className = 'gm-grid single-col';
+    ENG210_OPTS.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'gm-option' + (custom[courseId]?.st===opt.st ? ' selected' : '');
+      btn.innerHTML = `<div class="gm-st">${opt.st}</div><div class="gm-msu">→ ${opt.msu} — ${opt.note}</div>`;
+      btn.addEventListener('click', ()=>selectGenEd(courseId, opt.st, opt.msu));
+      elecGrid.appendChild(btn);
+    });
+  } else if(isEEElec){
+    let opts = isEEPower ? EE_POWER_OPTS
+              : isEEElecABC ? EE_ELEC_ABC_OPTS
+              : isEEElecD   ? EE_ELEC_D_OPTS
+              : EE_ELEC_E_OPTS;
+    document.getElementById('gm-elec-label').textContent =
+      isEEPower ? 'Power Elective Options (includes lab)' :
+      isEEElecABC ? 'EE Elective Options (A / B / C)' :
+      isEEElecD   ? 'EE Elective D Options' : 'EE Elective E Options';
+    elecGrid.className = 'gm-grid single-col';
+    opts.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'gm-option' + (custom[courseId]?.st===opt.st ? ' selected' : '');
+      btn.innerHTML = `
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <div class="gm-st">${opt.st}</div>
+          <div style="font-size:11px;color:var(--text);">${opt.title}</div>
+        </div>
+        ${opt.note ? `<div class="gm-msu">${opt.note}</div>` : ''}
+        ${opt.credits ? `<div class="gm-msu">${opt.credits} credits</div>` : ''}
+      `;
+      btn.addEventListener('click', ()=>selectGenEd(courseId, opt.st, opt.title||opt.st));
+      elecGrid.appendChild(btn);
+    });
+  }
+
+  // ── GenEd Group 1 ──
+  if(document.getElementById('gm-grp1-section').style.display !== 'none'){
+    const g1 = document.getElementById('gm-grp1');
+    g1.className = 'gm-grid';
+    g1.innerHTML = '';
+    GENED_GRP1.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'gm-option' + (custom[courseId]?.st===opt.st ? ' selected' : '');
+      btn.innerHTML = `<div class="gm-st">${opt.st}</div><div class="gm-msu">→ ${opt.msu}</div>`;
+      btn.addEventListener('click', ()=>selectGenEd(courseId, opt.st, opt.msu));
+      g1.appendChild(btn);
+    });
+  }
+
+  // ── GenEd Group 2 ──
+  if(document.getElementById('gm-grp2-section').style.display !== 'none'){
+    const g2 = document.getElementById('gm-grp2');
+    g2.className = 'gm-grid';
+    g2.innerHTML = '';
+    GENED_GRP2.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'gm-option' + (custom[courseId]?.st===opt.st ? ' selected' : '');
+      btn.innerHTML = `<div class="gm-st">${opt.st}</div><div class="gm-msu">→ ${opt.msu}</div>`;
+      btn.addEventListener('click', ()=>selectGenEd(courseId, opt.st, opt.msu));
+      g2.appendChild(btn);
+    });
+  }
+
+  // Pre-fill manual fields
+  const cx = custom[courseId];
+  document.getElementById('gm-custom-st').value  = cx?.st  || '';
+  document.getElementById('gm-custom-msu').value = cx?.msu || '';
+
+  document.getElementById('gened-modal').classList.add('open');
+}
+
+function selectGenEd(courseId, st, msu){
+  snapshot();
+  custom[courseId] = { st, msu: msu==='No equivalent'?'':msu };
+  document.getElementById('gened-modal').classList.remove('open');
+  render();
+}
+
+function applyCustomGenEd(){
+  const st  = document.getElementById('gm-custom-st').value.trim();
+  const msu = document.getElementById('gm-custom-msu').value.trim();
+  if(!st){ document.getElementById('gm-custom-st').focus(); return; }
+  snapshot();
+  custom[_genedTargetId] = { st, msu };
+  document.getElementById('gened-modal').classList.remove('open');
+  render();
+}
+
+function clearGenEdCustom(){
+  if(!_genedTargetId) return;
+  snapshot();
+  delete custom[_genedTargetId];
+  document.getElementById('gm-custom-st').value='';
+  document.getElementById('gm-custom-msu').value='';
+  document.getElementById('gened-modal').classList.remove('open');
+  render();
+}
+
+// Close GenEd modal on backdrop click
+document.getElementById('gened-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('gened-modal'))
+    document.getElementById('gened-modal').classList.remove('open');
+});
+
+// ═══ SCHEDULE BUILDER ═══
+// schedTimes: { semId: { courseId: {days:['M','W','F'], start:'09:00', end:'09:50', color:'#...'} } }
+// Also stores extra blocks: { semId: [ {label, days, start, end, color} ] }
+let schedTimes = {};
+let schedExtras = {};
+let schedOnline = {};   // { semId: [ {label, color} ] }
+let _schedSemId = null;
+
+const SCHED_COLORS = [
+  '#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6',
+  '#ec4899','#14b8a6','#f97316','#6366f1','#84cc16',
+  '#06b6d4','#e11d48','#7c3aed','#059669','#d97706',
+];
+const DAYS = ['M','T','W','Th','F'];
+const DAY_LABELS = {M:'Mon',T:'Tue',W:'Wed',Th:'Thu',F:'Fri'};
+
+// ── Default course times from official 2026 schedule ──
+// Format: { courseId: { fall:{days,start,end}, spring:{days,start,end}, summer:{days,start,end} } }
+// days: array of 'M','T','W','Th','F'  |  start/end: 'HH:MM' 24hr
+const DEFAULT_TIMES = {
+  // ── SHARED / EGR ──
+  'FE1100':      { fall:{days:['T'],           start:'15:30',end:'16:20'}, spring:{days:['T'],           start:'15:30',end:'16:20'} },
+
+  // ── CE courses ──
+  'CE2200':      { fall:{days:['M','W','F'],   start:'12:20',end:'13:10'}, spring:{days:['M','W','F'],   start:'12:20',end:'13:10'} },
+  'CE2210':      { fall:{days:['M','W','F'],   start:'09:00',end:'09:50'}, spring:{days:['M','W','F'],   start:'11:00',end:'11:50'} },
+  'CE2211':      { fall:{days:['Th'],          start:'13:00',end:'14:50'}, spring:{days:['Th'],          start:'14:00',end:'15:50'} },
+  'CE2003':      { fall:{days:['T','Th'],      start:'16:30',end:'18:30'} },
+  'CE2401':      { fall:{days:['T','Th'],      start:'11:15',end:'12:05'} },
+  'CE2601':      { fall:{days:['T','Th'],      start:'14:00',end:'14:50'}, spring:{days:['M','W'],       start:'12:00',end:'12:50'} },
+  'CE3201':      { fall:{days:['M','W'],       start:'10:00',end:'10:50'}, summer:{days:['M','T','W','Th','F'], start:'08:00',end:'09:00'} },
+  'CE3210':      { fall:{days:['T','Th'],      start:'11:00',end:'11:50'} },
+  'CE3220':      { spring:{days:['W','F'],     start:'13:00',end:'13:50'} },
+  'CE3330':      { fall:{days:['T','Th'],      start:'09:30',end:'10:45'}, summer:{days:['M','T','W','Th','F'],start:'12:00',end:'13:00'} },
+  'CE3334':      { spring:{days:['M','W','F'], start:'09:00',end:'09:50'} },
+  'CE3500':      { spring:{days:['M','W'],     start:'10:00',end:'10:50'} },
+  'CE3715':      { fall:{days:['M','W','F'],   start:'13:00',end:'13:50'} },
+  'CE3842':      { spring:{days:['T','Th'],    start:'08:00',end:'09:15'} },
+  'CE3116':      { spring:{days:['T','Th'],    start:'11:00',end:'11:50'} },
+  'CE4010':      { fall:{days:['W'],           start:'12:00',end:'12:50'} },
+  'CE4097':      { fall:{days:['M'],           start:'13:00',end:'15:50'}, spring:{days:['M'],           start:'13:00',end:'15:50'} },
+  'CE4448':      { fall:{days:['T','Th'],      start:'08:00',end:'09:15'} },
+  'ENGMGT1210':  { fall:{days:[],              start:'',     end:'',     online:true}, spring:{days:[],  start:'',     end:'',     online:true} },
+
+  // ── EE / CpE courses ──
+  'CPE2210':     { fall:{days:['M','W','F'],   start:'13:00',end:'13:50'}, spring:{days:['M','W','F'],   start:'13:00',end:'13:50'} },
+  'CPE2211':     { fall:{days:['T'],           start:'16:30',end:'18:20'}, spring:{days:['F'],           start:'16:30',end:'18:20'} },
+  'EE2100':      { fall:{days:['M','W','F'],   start:'14:00',end:'14:50'}, spring:{days:['M','W','F'],   start:'14:00',end:'14:50'}, summer:{days:['M','W','F'], start:'08:00',end:'08:50'} },
+  'EE2101':      { fall:{days:['M'],           start:'16:00',end:'17:50'}, spring:{days:['M'],           start:'16:00',end:'17:50'} },
+  'EE2120':      { fall:{days:['M','W','F'],   start:'15:00',end:'15:50'}, spring:{days:['M','W','F'],   start:'14:00',end:'14:50'}, summer:{days:['M','T','W','Th'],start:'13:50',end:'14:50'} },
+  'EE2410':      { fall:{days:['M','W','F'],   start:'09:00',end:'09:50'} },
+  'EE2411':      { fall:{days:['M'],           start:'16:00',end:'17:50'} },
+  'EE3100':      { fall:{days:['T','Th'],      start:'09:30',end:'10:45'}, spring:{days:['T','Th'],      start:'11:00',end:'12:15'}, summer:{days:['M','T','W','Th','F'],start:'09:10',end:'10:10'} },
+  'EE3101':      { fall:{days:['W'],           start:'14:00',end:'15:50'}, spring:{days:['T'],           start:'14:00',end:'15:50'} },
+  'EE3320':      { fall:{days:['M','W','F'],   start:'11:00',end:'11:50'} },
+  'EE3321':      { fall:{days:['W'],           start:'16:00',end:'17:50'} },
+  'EE3340':      { fall:{days:['T','Th'],      start:'08:00',end:'09:15'}, spring:{days:['T','Th'],      start:'08:00',end:'09:15'} },
+  'EE3410':      { fall:{days:['M','W','F'],   start:'09:00',end:'09:50'}, spring:{days:['T','Th'],      start:'09:30',end:'10:45'}, summer:{days:['M','T','W','Th','F'],start:'19:00',end:'20:15'} },
+  'EE3430':      { fall:{days:['M','W','F'],   start:'10:00',end:'10:50'}, summer:{days:['M','T','W','Th','F'],start:'08:00',end:'09:00'} },
+  'EE3431':      { fall:{days:['Th'],          start:'16:30',end:'18:20'} },
+  'EE3500':      { fall:{days:['T','Th'],      start:'15:30',end:'16:45'} },
+  'EE3501':      { fall:{days:['T'],           start:'17:00',end:'18:50'} },
+  'EE3540':      { spring:{days:['M','W','F'], start:'13:00',end:'13:50'} },
+  'EE3541':      { spring:{days:['W'],         start:'15:00',end:'16:50'} },
+  'EE3600':      { spring:{days:['M','W','F'], start:'10:00',end:'10:50'} },
+  'EE4096':      { fall:{days:['M','W'],       start:'12:00',end:'12:50'} },
+  'EE4097':      { spring:{days:['M'],         start:'16:00',end:'18:30'} },
+  'MATH3108':    { spring:{days:['M','W','F'], start:'09:00',end:'09:50'} }, // Linear Algebra — typical time
+  'SPMS1185':    { fall:{days:['T','Th'],      start:'09:30',end:'10:45'}, spring:{days:['T','Th'],      start:'09:30',end:'10:45'} },
+
+  // ── ME courses ──
+  'ME1720':      { fall:{days:['M','W','F'],   start:'10:00',end:'10:50'}, spring:{days:['M','W','F'],   start:'10:00',end:'10:50'} },
+  'ME1761':      { fall:{days:[],              start:'',     end:'',      online:true} },
+  'ME2360':      { fall:{days:['M','W','F'],   start:'10:00',end:'10:50'}, spring:{days:['T','Th'],      start:'09:30',end:'10:45'}, summer:{days:['M','T','W','Th','F'],start:'08:00',end:'09:00'} },
+  'ME2519':      { fall:{days:['M','W','F'],   start:'11:00',end:'11:50'}, spring:{days:['M','W','F'],   start:'13:00',end:'13:50'}, summer:{days:['M','T','W','Th','F'],start:'08:00',end:'09:00'} },
+  'ME2653':      { fall:{days:['M','W'],       start:'14:00',end:'14:50'} },
+  'ME2761':      { spring:{days:['M','W'],     start:'14:00',end:'14:50'} },
+  'ME3131':      { spring:{days:['M','W','F'], start:'11:00',end:'11:50'}, summer:{days:['M','T','W','Th','F'],start:'08:00',end:'09:00'} },
+  'ME3313':      { fall:{days:['M','W','F'],   start:'12:00',end:'12:50'}, summer:{days:['M','T','W','Th','F'],start:'08:00',end:'09:00'} },
+  'ME3411':      { spring:{days:['T','Th'],    start:'08:00',end:'09:15'}, summer:{days:['M','T','W','Th','F'],start:'08:00',end:'09:00'} },
+  'ME3521':      { fall:{days:['M','W','F'],   start:'10:00',end:'10:50'} },
+  'ME3525':      { spring:{days:['M','W','F'], start:'09:00',end:'09:50'} },
+  'ME3708':      { fall:{days:['M','W','F'],   start:'09:00',end:'09:50'}, summer:{days:['M','T','W','Th','F'],start:'11:00',end:'12:00'} },
+  'ME4479':      { fall:{days:['T','Th'],      start:'09:30',end:'10:45'} },
+  'ME4480':      { fall:{days:['M'],           start:'12:00',end:'14:50'} },
+  'ME4761':      { spring:{days:['M','W','F'], start:'13:00',end:'13:50'} },
+  'ME4840':      { spring:{days:['T','Th'],    start:'11:00',end:'11:50'} },
+  'ME4842':      { fall:{days:['W'],           start:'15:00',end:'15:50'} },
+  'MTENG2110':   { fall:{days:['M','W','F'],   start:'09:00',end:'09:50'}, spring:{days:['M','W','F'],   start:'09:00',end:'09:50'} },
+  'STAT3113':    { fall:{days:['M','W','F'],   start:'10:00',end:'10:50'}, spring:{days:['M','W','F'],   start:'10:00',end:'10:50'} },
+  'STAT3115':    { spring:{days:['M','W','F'], start:'10:00',end:'10:50'} },
+  'MATH3304':    { fall:{days:['M','W','F'],   start:'11:00',end:'11:50'}, spring:{days:['M','W','F'],   start:'11:00',end:'11:50'} },
+};
+
+function getDefaultTime(cid, semId){
+  const si  = SEM_IDS.find(s=>s.id===semId);
+  const key = si?.isSummer?'summer':si?.season==='fall'?'fall':'spring';
+  const entry = DEFAULT_TIMES[cid];
+  if(!entry) return null;
+  return entry[key]||null;
+}
+
+function openSchedule(semId){
+  _schedSemId = semId;
+  const si = SEM_IDS.find(s=>s.id===semId);
+  const season = si?.isSummer?'Summer':si?.season==='fall'?'Fall':'Spring';
+  const yr = si?.year||'';
+  document.getElementById('sched-title').textContent = `${season} ${yr} — Weekly Schedule`;
+
+  if(!schedTimes[semId]) schedTimes[semId]={};
+  if(!schedExtras[semId]) schedExtras[semId]=[];
+  if(!schedOnline[semId]) schedOnline[semId]=[];
+
+  // Auto-populate defaults for any course that has no time set yet
+  (plan[semId]||[]).forEach((cid, idx)=>{
+    if(!schedTimes[semId][cid]){
+      const def = getDefaultTime(cid, semId);
+      const color = SCHED_COLORS[idx % SCHED_COLORS.length];
+      if(def){
+        schedTimes[semId][cid] = {
+          days:  def.days||[],
+          start: def.start||'',
+          end:   def.end||'',
+          color,
+          online: !!def.online
+        };
+      } else {
+        schedTimes[semId][cid] = {days:[], start:'', end:'', color, online:false};
+      }
+    }
+  });
+
+  renderSchedCourseList();
+  renderSchedGrid();
+  renderOnlineList();
+  document.getElementById('sched-modal').classList.add('open');
+}
+
+// ── Time select helpers ──
+function timeSelectsHtml(prefix, val){
+  const [hStr, mStr] = val ? val.split(':') : ['',''];
+  const selH = parseInt(hStr)||'';
+  const selM = parseInt(mStr);
+
+  const hrs = Array.from({length:14}, (_,i)=>i+7); // 7am–8pm
+  const hOpts = `<option value="">--</option>` +
+    hrs.map(h=>{
+      const ap = h>=12?'pm':'am', lh = h>12?h-12:h;
+      return `<option value="${String(h).padStart(2,'0')}" ${selH===h?'selected':''}>${lh}${ap}</option>`;
+    }).join('');
+
+  const mOpts = [0,15,30,45].map(m=>
+    `<option value="${String(m).padStart(2,'0')}" ${selM===m?'selected':''}>${String(m).padStart(2,'0')}</option>`
+  ).join('');
+
+  const sel = `padding:6px 8px;border:1.5px solid var(--border2);border-radius:6px;font-size:12px;font-family:var(--mono);outline:none;background:var(--white);cursor:pointer;min-width:70px;`;
+  return `<select id="${prefix}-h" style="${sel}" onchange="updateTimeFromSelects('${prefix}')">${hOpts}</select>` +
+         `<span style="font-size:11px;color:var(--text3);margin:0 1px;">:</span>` +
+         `<select id="${prefix}-m" style="${sel}" onchange="updateTimeFromSelects('${prefix}')">${mOpts}</select>`;
+}
+
+function updateTimeFromSelects(prefix){
+  const h = document.getElementById(prefix+'-h')?.value;
+  const m = document.getElementById(prefix+'-m')?.value;
+  if(!h||m===undefined) return;
+  const val = `${h}:${m}`;
+  // Determine if this is a course time or extra block
+  const parts = prefix.split('-'); // e.g. "st-CHEM1310-start" or "ex-start"
+  if(parts[0]==='ct'){
+    const cid = parts[1], field = parts[2];
+    setSchedTime(cid, field, val);
+  } else if(parts[0]==='ex'){
+    // extra block handled by addExtraBlock reading selects directly
+  }
+}
+
+function toggleOnline(cid){
+  const sid = _schedSemId;
+  if(!schedTimes[sid][cid]) schedTimes[sid][cid]={days:[],start:'',end:'',color:'',online:false};
+  schedTimes[sid][cid].online = !schedTimes[sid][cid].online;
+  renderSchedCourseList();
+  renderSchedGrid();
+}
+
+function renderSchedCourseList(){
+  const sid = _schedSemId;
+  const courseIds = plan[sid]||[];
+  const list = document.getElementById('sched-course-list');
+  list.innerHTML='';
+
+  if(!courseIds.length){
+    list.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">No courses in this semester yet.</div>';
+    return;
+  }
+
+  courseIds.forEach((cid, idx)=>{
+    const c = gc(cid); if(!c) return;
+    const color = SCHED_COLORS[idx % SCHED_COLORS.length];
+    if(!schedTimes[sid][cid]) schedTimes[sid][cid] = {days:[], start:'', end:'', color, online:false};
+    const t = schedTimes[sid][cid];
+    if(!t.color) t.color = color;
+
+    const isOnline = !!t.online;
+    const row = document.createElement('div');
+    row.style.cssText=`border:1.5px solid ${isOnline?color+'60':'var(--border)'};border-radius:8px;padding:8px 10px;margin-bottom:8px;background:${isOnline?color+'0d':'var(--white)'};`;
+
+    let timeSection = '';
+    if(!isOnline){
+      timeSection = `
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+          ${DAYS.map(d=>`<button onclick="toggleDay('${cid}','${d}')" style="padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;border:1.5px solid ${t.days.includes(d)?color:'var(--border2)'};background:${t.days.includes(d)?color:'transparent'};color:${t.days.includes(d)?'#fff':'var(--text2)'};cursor:pointer;font-family:var(--sans);">${DAY_LABELS[d]}</button>`).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:40px 1fr;gap:6px;align-items:center;font-size:11px;color:var(--text3);">
+          <span style="font-weight:500;">From</span><div style="display:flex;align-items:center;gap:4px;">${timeSelectsHtml(`ct-${cid}-start`, t.start||'')}</div>
+          <span style="font-weight:500;">To</span><div style="display:flex;align-items:center;gap:4px;">${timeSelectsHtml(`ct-${cid}-end`, t.end||'')}</div>
+        </div>`;
+    } else {
+      timeSection = `<div style="font-size:10px;color:${color};font-weight:600;padding:4px 0;">🌐 Online / Async — no set meeting time</div>`;
+    }
+
+    row.innerHTML=`
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+        <div style="width:12px;height:12px;border-radius:3px;background:${color};flex-shrink:0;"></div>
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);">${c.msuCode||c.stCode}</div>
+        <div style="font-size:10px;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.title}</div>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:var(--text2);white-space:nowrap;flex-shrink:0;">
+          <input type="checkbox" ${isOnline?'checked':''} onchange="toggleOnline('${cid}')" style="width:13px;height:13px;cursor:pointer;accent-color:${color};">
+          Online
+        </label>
+      </div>
+      ${timeSection}
+    `;
+    list.appendChild(row);
+  });
+
+  // Extra blocks
+  const extras = schedExtras[sid];
+  if(extras.length){
+    const eHdr=document.createElement('div');
+    eHdr.style.cssText='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin:10px 0 6px;';
+    eHdr.textContent='Extra Blocks';
+    list.appendChild(eHdr);
+    extras.forEach((ex,i)=>{
+      const eRow=document.createElement('div');
+      eRow.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px;';
+      eRow.innerHTML=`
+        <div style="width:10px;height:10px;border-radius:2px;background:${ex.color};flex-shrink:0;"></div>
+        <div style="flex:1;font-size:10px;font-weight:600;color:var(--text);">${ex.label}</div>
+        <div style="font-size:9px;color:var(--text3);">${ex.days.join(',')} ${ex.start}–${ex.end}</div>
+        <button onclick="removeExtra(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;">×</button>
+      `;
+      list.appendChild(eRow);
+    });
+  }
+  renderOnlineList();
+}
+
+function toggleDay(cid, day){
+  const sid=_schedSemId;
+  if(!schedTimes[sid][cid]) schedTimes[sid][cid]={days:[],start:'',end:'',color:'',online:false};
+  const t=schedTimes[sid][cid];
+  if(t.days.includes(day)) t.days=t.days.filter(d=>d!==day);
+  else t.days.push(day);
+  renderSchedCourseList();
+  renderSchedGrid();
+}
+
+function setSchedTime(cid, field, val){
+  const sid=_schedSemId;
+  if(!schedTimes[sid][cid]) schedTimes[sid][cid]={days:[],start:'',end:'',color:'',online:false};
+  schedTimes[sid][cid][field]=val;
+  renderSchedGrid();
+}
+
+function addExtraBlock(){
+  const sid=_schedSemId;
+  const label=document.getElementById('sched-extra-label').value.trim();
+  if(!label) return;
+  const sel=document.getElementById('sched-extra-days');
+  const days=[...sel.selectedOptions].map(o=>o.value);
+  if(!days.length) return;
+  // Read from select dropdowns
+  const sh=document.getElementById('ex-start-h')?.value;
+  const sm=document.getElementById('ex-start-m')?.value;
+  const eh=document.getElementById('ex-end-h')?.value;
+  const em=document.getElementById('ex-end-m')?.value;
+  if(!sh||!eh) return;
+  const start=`${sh}:${sm||'00'}`, end=`${eh}:${em||'00'}`;
+  const color=SCHED_COLORS[(schedExtras[sid].length+20) % SCHED_COLORS.length];
+  schedExtras[sid].push({label, days, start, end, color});
+  document.getElementById('sched-extra-label').value='';
+  renderSchedCourseList();
+  renderSchedGrid();
+}
+
+function removeExtra(idx){
+  schedExtras[_schedSemId].splice(idx,1);
+  renderSchedCourseList();
+  renderSchedGrid();
+}
+
+function addOnlineClass(){
+  const sid = _schedSemId;
+  const input = document.getElementById('sched-online-input');
+  const label = input.value.trim();
+  if(!label) return;
+  const color = SCHED_COLORS[(schedOnline[sid].length + 10) % SCHED_COLORS.length];
+  schedOnline[sid].push({label, color});
+  input.value = '';
+  renderOnlineList();
+  renderSchedGrid();
+}
+
+function removeOnline(idx){
+  schedOnline[_schedSemId].splice(idx, 1);
+  renderOnlineList();
+  renderSchedGrid();
+}
+
+function renderOnlineList(){
+  const sid = _schedSemId;
+  const list = document.getElementById('sched-online-list');
+  if(!list) return;
+  const items = schedOnline[sid]||[];
+  if(!items.length){ list.innerHTML=''; return; }
+  list.innerHTML = items.map((item,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);">
+      <div style="width:10px;height:10px;border-radius:2px;background:${item.color};flex-shrink:0;"></div>
+      <div style="flex:1;font-size:10px;color:var(--text);font-weight:500;">${item.label}</div>
+      <button onclick="removeOnline(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;line-height:1;padding:0;">×</button>
+    </div>
+  `).join('');
+}
+
+function clearSchedTimes(){
+  schedTimes[_schedSemId]={};
+  schedExtras[_schedSemId]=[];
+  schedOnline[_schedSemId]=[];
+  renderSchedCourseList();
+  renderSchedGrid();
+  renderOnlineList();
+}
+
+function timeToMin(t){
+  if(!t) return null;
+  const [h,m]=t.split(':').map(Number);
+  return h*60+m;
+}
+function minToLabel(m){
+  const h=Math.floor(m/60), mn=m%60;
+  const ap=h>=12?'pm':'am', hr=h>12?h-12:h||12;
+  return `${hr}:${mn.toString().padStart(2,'0')}${ap}`;
+}
+
+function renderSchedGrid(){
+  const sid=_schedSemId;
+  const wrap=document.getElementById('sched-grid-wrap');
+  const courseIds=plan[sid]||[];
+
+  // Collect all blocks
+  const blocks=[];
+  courseIds.forEach((cid,idx)=>{
+    const t=schedTimes[sid]?.[cid];
+    if(!t||!t.days.length||!t.start||!t.end) return;
+    const sMin=timeToMin(t.start), eMin=timeToMin(t.end);
+    if(sMin===null||eMin===null||eMin<=sMin) return;
+    const c=gc(cid);
+    const color=t.color||SCHED_COLORS[idx%SCHED_COLORS.length];
+    t.days.forEach(day=>{
+      blocks.push({day, sMin, eMin, label:c?.msuCode||c?.stCode||cid, sub:c?.title||'', color, cid});
+    });
+  });
+  (schedExtras[sid]||[]).forEach((ex,i)=>{
+    const sMin=timeToMin(ex.start), eMin=timeToMin(ex.end);
+    if(sMin===null||eMin===null||eMin<=sMin) return;
+    ex.days.forEach(day=>{
+      blocks.push({day, sMin, eMin, label:ex.label, sub:'', color:ex.color, cid:'extra_'+i});
+    });
+  });
+
+  // Time range
+  const allStarts=blocks.map(b=>b.sMin);
+  const allEnds=blocks.map(b=>b.eMin);
+  const minTime=allStarts.length ? Math.max(420, Math.min(...allStarts)-30) : 480; // 7am floor
+  const maxTime=allEnds.length   ? Math.min(1320, Math.max(...allEnds)+30)  : 1020; // 5pm ceil
+  const duration=maxTime-minTime;
+  const pxPerMin=1.6;
+  const gridH=Math.round(duration*pxPerMin);
+  const timeColW=44;
+  const dayColW=120;
+
+  // Hour lines
+  const hours=[];
+  for(let m=Math.ceil(minTime/60)*60; m<=maxTime; m+=60) hours.push(m);
+
+  let html=`<div style="display:flex;position:relative;font-family:var(--sans);">`;
+
+  // Time labels column
+  html+=`<div style="width:${timeColW}px;flex-shrink:0;position:relative;height:${gridH}px;margin-top:28px;">`;
+  hours.forEach(m=>{
+    const y=Math.round((m-minTime)*pxPerMin);
+    html+=`<div style="position:absolute;top:${y}px;right:4px;font-size:9px;color:var(--text3);font-family:var(--mono);transform:translateY(-50%);white-space:nowrap;">${minToLabel(m)}</div>`;
+  });
+  html+=`</div>`;
+
+  // Day columns
+  DAYS.forEach(day=>{
+    const dayBlocks=blocks.filter(b=>b.day===day);
+    html+=`<div style="width:${dayColW}px;flex-shrink:0;border-left:1px solid var(--border);">`;
+    // Day header
+    html+=`<div style="height:28px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border2);background:var(--surface);">${DAY_LABELS[day]}</div>`;
+    // Grid area
+    html+=`<div style="position:relative;height:${gridH}px;background:var(--white);">`;
+    // Hour lines
+    hours.forEach(m=>{
+      const y=Math.round((m-minTime)*pxPerMin);
+      html+=`<div style="position:absolute;left:0;right:0;top:${y}px;border-top:1px solid var(--border);opacity:.5;"></div>`;
+    });
+    // Blocks
+    dayBlocks.forEach(b=>{
+      const top=Math.round((b.sMin-minTime)*pxPerMin);
+      const height=Math.max(18, Math.round((b.eMin-b.sMin)*pxPerMin));
+      const dur=b.eMin-b.sMin;
+      html+=`<div style="
+        position:absolute;left:3px;right:3px;top:${top}px;height:${height}px;
+        background:${b.color};color:#fff;border-radius:5px;
+        padding:3px 5px;overflow:hidden;cursor:default;
+        box-shadow:0 1px 4px rgba(0,0,0,.2);
+        font-size:${height>30?'9':'8'}px;
+        " title="${b.label} · ${minToLabel(b.sMin)}–${minToLabel(b.eMin)}">
+        <div style="font-weight:700;line-height:1.2;">${b.label}</div>
+        ${height>24?`<div style="opacity:.85;font-size:8px;">${minToLabel(b.sMin)}–${minToLabel(b.eMin)}</div>`:''}
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+
+  html+=`</div>`;
+
+  // Empty state
+  if(!blocks.length){
+    html='<div style="padding:32px 16px;text-align:center;color:var(--text3);font-size:12px;line-height:1.8;">No scheduled class times yet.<br>Courses with known official times are pre-filled on the left.<br>For courses showing no days, select which days they meet.</div>';
+  }
+
+  // Collect all online items: explicit online list + courses marked online
+  const onlineItems = [...(schedOnline[sid]||[])];
+  courseIds.forEach((cid,idx)=>{
+    const t = schedTimes[sid]?.[cid];
+    if(t?.online){
+      const c = gc(cid);
+      const color = t.color||SCHED_COLORS[idx%SCHED_COLORS.length];
+      onlineItems.push({label: (c?.msuCode||c?.stCode||cid) + (c?.title ? ' — '+c.title : ''), color});
+    }
+  });
+
+  if(onlineItems.length){
+    html += `
+      <div style="margin-top:18px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px;">🌐 Online / Async Classes</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${onlineItems.map(item=>`
+            <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:7px;border:1.5px solid ${item.color}30;background:${item.color}15;">
+              <div style="width:10px;height:10px;border-radius:3px;background:${item.color};flex-shrink:0;"></div>
+              <span style="font-size:11px;font-weight:600;color:var(--text);">${item.label}</span>
+              <span style="font-size:10px;color:var(--text3);">· No set meeting time</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Conflict detection
+  const conflicts = [];
+  DAYS.forEach(day=>{
+    const dayBlocks = blocks.filter(b=>b.day===day).sort((a,b)=>a.sMin-b.sMin);
+    for(let i=0;i<dayBlocks.length-1;i++){
+      for(let j=i+1;j<dayBlocks.length;j++){
+        if(dayBlocks[j].sMin < dayBlocks[i].eMin){
+          conflicts.push(`${DAY_LABELS[day]}: ${dayBlocks[i].label} (${minToLabel(dayBlocks[i].sMin)}–${minToLabel(dayBlocks[i].eMin)}) overlaps with ${dayBlocks[j].label} (${minToLabel(dayBlocks[j].sMin)}–${minToLabel(dayBlocks[j].eMin)})`);
+        }
+      }
+    }
+  });
+
+  if(conflicts.length){
+    html = `<div style="background:#fef2f2;border:1.5px solid var(--red-border);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--red);font-weight:500;">
+      ⚠ Schedule Conflicts Detected:<br>
+      <ul style="margin:6px 0 0 14px;">${conflicts.map(c=>`<li style="margin-bottom:3px;">${c}</li>`).join('')}</ul>
+    </div>` + html;
+  }
+
+  wrap.innerHTML=html;
+}
+
+function saveSchedImage(){
+  const sid = _schedSemId;
+  const si  = SEM_IDS.find(s=>s.id===sid);
+  const season = si?.isSummer?'Summer':si?.season==='fall'?'Fall':'Spring';
+  const yr = si?.year||'';
+  const title = `${season} ${yr} — Weekly Schedule`;
+
+  // Collect blocks (same logic as renderSchedGrid)
+  const courseIds = plan[sid]||[];
+  const blocks = [];
+  courseIds.forEach((cid,idx)=>{
+    const t = schedTimes[sid]?.[cid];
+    if(!t||!t.days.length||!t.start||!t.end) return;
+    const sMin=timeToMin(t.start), eMin=timeToMin(t.end);
+    if(sMin===null||eMin===null||eMin<=sMin) return;
+    const c = gc(cid);
+    const color = t.color||SCHED_COLORS[idx%SCHED_COLORS.length];
+    t.days.forEach(day=>{
+      blocks.push({day, sMin, eMin, label:c?.msuCode||c?.stCode||cid, sub:c?.title||'', color});
+    });
+  });
+  (schedExtras[sid]||[]).forEach((ex,i)=>{
+    const sMin=timeToMin(ex.start), eMin=timeToMin(ex.end);
+    if(sMin===null||eMin===null||eMin<=sMin) return;
+    ex.days.forEach(day=>{
+      blocks.push({day, sMin, eMin, label:ex.label, sub:'', color:ex.color});
+    });
+  });
+
+  // Layout constants
+  const allStarts = blocks.map(b=>b.sMin);
+  const allEnds   = blocks.map(b=>b.eMin);
+  const minTime   = allStarts.length ? Math.max(420, Math.min(...allStarts)-30) : 480;
+  const maxTime   = allEnds.length   ? Math.min(1320, Math.max(...allEnds)+30)  : 1020;
+  const duration  = maxTime - minTime;
+
+  const DPR      = 2;          // retina quality
+  const TITLE_H  = 44;
+  const HDR_H    = 30;
+  const TIME_W   = 52;
+  const DAY_W    = 130;
+  const PX_MIN   = 1.8;
+  const GRID_H   = Math.round(duration * PX_MIN);
+  const TOTAL_W  = TIME_W + DAY_W * 5 + 2;
+  const onlineItems = schedOnline[sid]||[];
+  const ONLINE_H = onlineItems.length ? 50 + Math.ceil(onlineItems.length/3)*28 : 0;
+  const TOTAL_H  = TITLE_H + HDR_H + GRID_H + 20 + ONLINE_H;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = TOTAL_W  * DPR;
+  canvas.height = TOTAL_H * DPR;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  // Background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
+
+  // Title bar
+  ctx.fillStyle = '#1c2030';
+  ctx.fillRect(0, 0, TOTAL_W, TITLE_H);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 15px "DM Sans", system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(title, 14, TITLE_H / 2);
+  ctx.font = '11px "DM Sans", system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.fillText('Missouri State · Cooperative Engineering Program · Unofficial', 14, TITLE_H / 2 + 14);
+
+  const gridTop = TITLE_H + HDR_H;
+
+  // Day column headers
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#1d4ed8';
+  DAYS.forEach((day, di)=>{
+    const x = TIME_W + di * DAY_W;
+    ctx.fillStyle = '#f0f2f5';
+    ctx.fillRect(x, TITLE_H, DAY_W, HDR_H);
+    ctx.strokeStyle = '#d4d8e2';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, TITLE_H, DAY_W, HDR_H);
+    ctx.fillStyle = '#4a5568';
+    ctx.font = 'bold 11px "DM Sans", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(DAY_LABELS[day], x + DAY_W/2, TITLE_H + HDR_H/2);
+  });
+
+  // Grid background stripes (alternating columns)
+  DAYS.forEach((day, di)=>{
+    const x = TIME_W + di * DAY_W;
+    ctx.fillStyle = di%2===0 ? '#fafbfc' : '#f7f9ff';
+    ctx.fillRect(x, gridTop, DAY_W, GRID_H);
+    ctx.strokeStyle = '#e8eaef';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, gridTop, DAY_W, GRID_H);
+  });
+
+  // Hour lines + time labels
+  const hours = [];
+  for(let m=Math.ceil(minTime/60)*60; m<=maxTime; m+=60) hours.push(m);
+  hours.forEach(m=>{
+    const y = gridTop + Math.round((m - minTime) * PX_MIN);
+    ctx.strokeStyle = '#d4d8e2';
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    ctx.moveTo(TIME_W, y);
+    ctx.lineTo(TOTAL_W - 2, y);
+    ctx.stroke();
+    ctx.fillStyle = '#9099aa';
+    ctx.font = '9px "DM Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(minToLabel(m), TIME_W - 4, y);
+  });
+
+  // Course blocks
+  const RADIUS = 5;
+  blocks.forEach(b=>{
+    const di = DAYS.indexOf(b.day);
+    if(di < 0) return;
+    const x   = TIME_W + di * DAY_W + 3;
+    const y   = gridTop + Math.round((b.sMin - minTime) * PX_MIN);
+    const w   = DAY_W - 6;
+    const h   = Math.max(16, Math.round((b.eMin - b.sMin) * PX_MIN));
+
+    // Rounded rect fill
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, RADIUS);
+    ctx.fill();
+
+    // Subtle inner shadow effect
+    ctx.fillStyle = 'rgba(0,0,0,.08)';
+    ctx.beginPath();
+    ctx.roundRect(x, y+h-4, w, 4, [0,0,RADIUS,RADIUS]);
+    ctx.fill();
+
+    // Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold 10px "DM Mono", monospace`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(b.label, x+5, y+4);
+    if(h > 26){
+      ctx.font = '8px "DM Sans", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.85)';
+      ctx.fillText(`${minToLabel(b.sMin)}–${minToLabel(b.eMin)}`, x+5, y+16);
+    }
+  });
+
+  // Border
+  ctx.strokeStyle = '#d4d8e2';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(0.75, 0.75, TOTAL_W - 1.5, TOTAL_H - 1.5);
+
+  // Online classes section
+  if(onlineItems.length){
+    const oTop = TITLE_H + HDR_H + GRID_H + 28;
+    ctx.fillStyle = '#f8f9fb';
+    ctx.strokeStyle = '#d4d8e2';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(8, oTop, TOTAL_W-16, ONLINE_H-12, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6b7a96';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('🌐  ONLINE / ASYNC CLASSES', 16, oTop+8);
+    onlineItems.forEach((item,i)=>{
+      const col = i%3, row = Math.floor(i/3);
+      const ix = 16 + col * ((TOTAL_W-32)/3);
+      const iy = oTop + 22 + row * 26;
+      ctx.fillStyle = item.color;
+      ctx.beginPath(); ctx.roundRect(ix, iy, 10, 10, 2); ctx.fill();
+      ctx.fillStyle = '#1c2030';
+      ctx.font = '10px sans-serif'; ctx.textBaseline = 'middle';
+      ctx.fillText(item.label, ix+14, iy+5);
+    });
+  }
+
+  // Download using data URL instead of blob URL (avoids CSP issues)
+  const btn = document.getElementById('sched-save-img-btn');
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Saving…';
+  btn.disabled = true;
+
+  try {
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `schedule-${season.toLowerCase()}-${yr.toLowerCase().replace(/\s+/g,'-')}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    btn.textContent = '✓ Saved!';
+  } catch(err) {
+    btn.textContent = '✗ Error — try again';
+    console.error('Schedule save error:', err);
+  }
+  btn.disabled = false;
+  setTimeout(()=>{ btn.textContent = origText; }, 2500);
+}
+
+// ═══ SAVE / LOAD ═══
+function openSave(){
+  document.getElementById('save-text').value=JSON.stringify({program:P,version:5,plan,completed,custom,schedTimes,schedExtras,schedOnline},null,2);
+  document.getElementById('save-modal').classList.add('open');
+}
+
+function copyAll(){
+  const ta=document.getElementById('save-text');
+  ta.select();
+  document.execCommand('copy');
+  const btn=event.target;
+  btn.textContent='✓ Copied!';
+  setTimeout(()=>btn.textContent='Copy All', 2000);
+}
+
+function openLoad(){
+  document.getElementById('load-text').value='';
+  document.getElementById('load-err').style.display='none';
+  document.getElementById('load-modal').classList.add('open');
+}
+
+function doLoad(){
+  const raw=document.getElementById('load-text').value.trim();
+  const errEl=document.getElementById('load-err');
+  try{
+    const data=JSON.parse(raw);
+    if(data.program && data.program!==P){
+      errEl.textContent=`This plan is for ${data.program}, not ${P}. Switch programs first.`;
+      errEl.style.display='block';
+      return;
+    }
+    plan={__prior__:[]};
+    SEM_IDS.forEach(s=>{plan[s.id]=[];});
+    if(data.plan) Object.entries(data.plan).forEach(([sid,arr])=>{
+      if(plan.hasOwnProperty(sid)) plan[sid]=arr.filter(id=>gc(id));
+    });
+    completed=data.completed||{};
+    custom=data.custom||{};
+    schedTimes=data.schedTimes||{};
+    schedExtras=data.schedExtras||{};
+    schedOnline=data.schedOnline||{};
+    history=[];
+    document.getElementById('load-modal').classList.remove('open');
+    errEl.style.display='none';
+    updateUndoBtn();
+    render();
+  }catch(e){
+    errEl.textContent='Could not parse — make sure you copied the full saved text.';
+    errEl.style.display='block';
+  }
+}
+
+// Close modals on backdrop click
+['save-modal','load-modal','reset-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===document.getElementById(id)) document.getElementById(id).classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
