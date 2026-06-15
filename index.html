@@ -633,14 +633,41 @@ textarea.tbox:focus { border-color: var(--accent); }
 .year-cr-label,.year-prog-bar,.year-prog-fill,.col-cr-row,
 .year-tabs,.ytab,.ytab-name,.ytab-cr,.ytab-dot-row,.ytab-dot { /* retained selectors */ }
 /* ══════════════════════════════════════════
-   RESPONSIVE — MOBILE (≤768px)
+   RESPONSIVE DESIGN
+   Desktop (>768px): sidebar always visible, two-column grid
+   Mobile (≤768px):  sidebar slides in as overlay, single column
    ══════════════════════════════════════════ */
+
+/* ── Desktop: explicit rules to ensure layout stays correct ── */
+@media (min-width: 769px) {
+  .body { grid-template-columns: 240px 1fr; }
+  .sidebar {
+    position: relative;
+    transform: none !important;
+    box-shadow: none;
+    width: auto;
+  }
+  .sidebar-overlay { display: none !important; }
+  #sidebar-toggle  { display: none !important; }
+  .modal-bg { align-items: center; padding: 20px; }
+  .modal { border-radius: var(--r-lg); }
+}
+
+/* ── Tablet (769px–1100px): slightly narrower sidebar ── */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .body { grid-template-columns: 200px 1fr; }
+  .hdr-sub { display: none; }
+  .hbtns { gap: 4px; }
+  .hbtn  { padding: 5px 9px; font-size: 11px; }
+}
+
+/* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
 
-  /* ── App shell fills full viewport ── */
-  .app { height:100dvh; }
+  /* App fills viewport */
+  .app { height: 100dvh; }
 
-  /* ── Header: stack into two rows ── */
+  /* Header stacks */
   .hdr {
     height: auto;
     flex-direction: column;
@@ -650,20 +677,19 @@ textarea.tbox:focus { border-color: var(--accent); }
   }
   .hdr-l { gap: 8px; flex-wrap: wrap; }
   .hdr-title { font-size: 13px; }
-  .hdr-sub   { display: none; }  /* hide on mobile to save space */
-  .hdr-r { gap: 10px; flex-wrap: wrap; width: 100%; justify-content: space-between; }
-  .hbtns { gap: 5px; margin-left: 0; flex-wrap: wrap; }
+  .hdr-sub   { display: none; }
+  .hdr-r { gap: 8px; flex-wrap: wrap; width: 100%; }
+  .hbtns { gap: 4px; margin-left: 0; flex-wrap: wrap; }
   .hbtn  { padding: 6px 10px; font-size: 11px; }
   .hstat-v { font-size: 14px; }
-  .hstat-l { font-size: 9px; }
 
-  /* ── Legend: wrap tightly ── */
+  /* Legend wraps */
   .legend { gap: 8px; font-size: 10px; padding: 5px 10px; }
 
-  /* ── Body: single column, sidebar slides in ── */
-  .body { grid-template-columns: 1fr; position: relative; }
+  /* Body: full width, sidebar overlays */
+  .body { grid-template-columns: 1fr; }
 
-  /* Sidebar hidden by default on mobile */
+  /* Sidebar slides in from left */
   .sidebar {
     position: fixed;
     top: 0; left: 0; bottom: 0;
@@ -672,66 +698,45 @@ textarea.tbox:focus { border-color: var(--accent); }
     z-index: 200;
     transform: translateX(-100%);
     transition: transform .25s ease;
-    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+    box-shadow: 4px 0 20px rgba(0,0,0,.2);
   }
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
+  .sidebar.mobile-open { transform: translateX(0); }
 
-  /* Overlay behind sidebar when open */
+  /* Dark overlay behind sidebar */
   .sidebar-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.4);
+    background: rgba(0,0,0,.45);
     z-index: 199;
   }
   .sidebar-overlay.active { display: block; }
 
+  /* Show the ☰ Courses toggle button */
+  #sidebar-toggle { display: inline-flex !important; }
+
   /* Main panel takes full width */
   .main-panel { border-left: none; }
 
-  /* Prior section */
-  .prior-row-head { padding: 8px 12px; }
-  .prior-chips-wrap { padding: 6px 12px 8px; }
-
-  /* Grid: single column on very small screens */
-  #grid-wrap { padding: 0; }
-
-  /* Modals full screen on mobile */
-  .modal-bg { padding: 8px; align-items: flex-end; }
-  .modal { width: 100% !important; max-width: 100% !important; border-radius: 16px 16px 0 0; max-height: 92vh; overflow-y: auto; }
-
-  /* Schedule modal stacks vertically */
-  #sched-modal .modal {
-    border-radius: 12px 12px 0 0;
-    max-height: 95dvh;
-  }
-  #sched-modal [style*="grid-template-columns:340px"] {
-    display: flex !important;
-    flex-direction: column !important;
+  /* Modals slide up from bottom */
+  .modal-bg { padding: 0; align-items: flex-end; }
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0;
+    max-height: 92dvh;
+    overflow-y: auto;
   }
 
-  /* Picker cards stack */
+  /* Picker cards stack vertically */
   .pick-cards { flex-direction: column; align-items: center; }
-  .pick-card { width: 85vw; max-width: 320px; padding: 20px 24px; }
+  .pick-card  { width: 88vw; max-width: 340px; }
 
-  /* Course cards slightly more compact */
-  .course-card { padding: 8px 10px; margin-bottom: 5px; }
-  .cc-msu { font-size: 13px; }
+  /* Course cards */
+  .course-card { padding: 8px 10px; }
+  .cc-msu  { font-size: 13px; }
   .cc-title { font-size: 12px; }
 
-  /* Sidebar cards */
-  .sc-card { padding: 8px 10px; }
-
-}
-
-/* ── Tablet (769px–1024px): sidebar narrower ── */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .body { grid-template-columns: 200px 1fr; }
-  .hdr-sub { display: none; }
-  .hbtns { gap: 4px; }
-  .hbtn  { padding: 5px 9px; font-size: 11px; }
 }
 
 </style>
