@@ -632,6 +632,108 @@ textarea.tbox:focus { border-color: var(--accent); }
 .col-header,.sem-col,.year-label-cell,.year-label-text,.year-cr-total,
 .year-cr-label,.year-prog-bar,.year-prog-fill,.col-cr-row,
 .year-tabs,.ytab,.ytab-name,.ytab-cr,.ytab-dot-row,.ytab-dot { /* retained selectors */ }
+/* ══════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── App shell fills full viewport ── */
+  .app { height:100dvh; }
+
+  /* ── Header: stack into two rows ── */
+  .hdr {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 14px 8px;
+    gap: 8px;
+  }
+  .hdr-l { gap: 8px; flex-wrap: wrap; }
+  .hdr-title { font-size: 13px; }
+  .hdr-sub   { display: none; }  /* hide on mobile to save space */
+  .hdr-r { gap: 10px; flex-wrap: wrap; width: 100%; justify-content: space-between; }
+  .hbtns { gap: 5px; margin-left: 0; flex-wrap: wrap; }
+  .hbtn  { padding: 6px 10px; font-size: 11px; }
+  .hstat-v { font-size: 14px; }
+  .hstat-l { font-size: 9px; }
+
+  /* ── Legend: wrap tightly ── */
+  .legend { gap: 8px; font-size: 10px; padding: 5px 10px; }
+
+  /* ── Body: single column, sidebar slides in ── */
+  .body { grid-template-columns: 1fr; position: relative; }
+
+  /* Sidebar hidden by default on mobile */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 85vw;
+    max-width: 320px;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Overlay behind sidebar when open */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 199;
+  }
+  .sidebar-overlay.active { display: block; }
+
+  /* Main panel takes full width */
+  .main-panel { border-left: none; }
+
+  /* Prior section */
+  .prior-row-head { padding: 8px 12px; }
+  .prior-chips-wrap { padding: 6px 12px 8px; }
+
+  /* Grid: single column on very small screens */
+  #grid-wrap { padding: 0; }
+
+  /* Modals full screen on mobile */
+  .modal-bg { padding: 8px; align-items: flex-end; }
+  .modal { width: 100% !important; max-width: 100% !important; border-radius: 16px 16px 0 0; max-height: 92vh; overflow-y: auto; }
+
+  /* Schedule modal stacks vertically */
+  #sched-modal .modal {
+    border-radius: 12px 12px 0 0;
+    max-height: 95dvh;
+  }
+  #sched-modal [style*="grid-template-columns:340px"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Picker cards stack */
+  .pick-cards { flex-direction: column; align-items: center; }
+  .pick-card { width: 85vw; max-width: 320px; padding: 20px 24px; }
+
+  /* Course cards slightly more compact */
+  .course-card { padding: 8px 10px; margin-bottom: 5px; }
+  .cc-msu { font-size: 13px; }
+  .cc-title { font-size: 12px; }
+
+  /* Sidebar cards */
+  .sc-card { padding: 8px 10px; }
+
+}
+
+/* ── Tablet (769px–1024px): sidebar narrower ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .body { grid-template-columns: 200px 1fr; }
+  .hdr-sub { display: none; }
+  .hbtns { gap: 4px; }
+  .hbtn  { padding: 5px 9px; font-size: 11px; }
+}
+
 </style>
 </head>
 <body>
@@ -662,6 +764,7 @@ textarea.tbox:focus { border-color: var(--accent); }
   <div class="hdr">
     <div class="hdr-l">
       <button class="back" onclick="goBack()">← Programs</button>
+      <button class="hbtn" id="sidebar-toggle" onclick="toggleMobileSidebar()" style="display:none;" title="Show/hide course catalog">☰ Courses</button>
       <div class="prog-pill" id="prog-pill">ME</div>
       <div>
         <div class="hdr-title" id="hdr-title">Mechanical Engineering</div>
@@ -700,6 +803,7 @@ textarea.tbox:focus { border-color: var(--accent); }
   <div id="issues-panel" style="display:none;background:#fef2f2;border-bottom:2px solid var(--red-border);padding:0;flex-shrink:0;max-height:140px;overflow-y:auto;"></div>
 
   <div class="body">
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
     <!-- SIDEBAR: Course list -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-top">
@@ -3553,6 +3657,34 @@ function savePlanImage(){
     console.error(err);
   }
 }
+
+// ═══ MOBILE SIDEBAR ═══
+function toggleMobileSidebar(){
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  const isOpen = sb.classList.contains('mobile-open');
+  if(isOpen){ closeMobileSidebar(); }
+  else { sb.classList.add('mobile-open'); ov.classList.add('active'); document.body.style.overflow='hidden'; }
+}
+
+function closeMobileSidebar(){
+  document.getElementById('sidebar')?.classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay')?.classList.remove('active');
+  document.body.style.overflow='';
+}
+
+function updateMobileUI(){
+  const isMobile = window.innerWidth <= 768;
+  const btn = document.getElementById('sidebar-toggle');
+  if(btn) btn.style.display = isMobile ? '' : 'none';
+  if(!isMobile) closeMobileSidebar();
+}
+
+window.addEventListener('resize', updateMobileUI);
+updateMobileUI();
+
+// Close sidebar when a course card is clicked on mobile (after adding to schedule)
+const _origRenderSidebar = renderSidebar;
 
 // ═══ SAVE / LOAD ═══
 function openSave(){
